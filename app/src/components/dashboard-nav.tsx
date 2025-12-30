@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Target, Mail, CornerUpLeft, MessageSquare, Calendar, Building2, Users, TrendingUp } from "lucide-react"
+import { Target, Mail, CornerUpLeft, MessageSquare, Calendar, Building2, Users, TrendingUp, Phone, PhoneCall } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+// import { Button } from "@/components/ui/button"
 
 export function DashboardNav() {
     const pathname = usePathname()
@@ -45,6 +45,16 @@ export function DashboardNav() {
             title: "Contacts",
             href: "/dashboard/contacts",
             icon: Users,
+        },
+        {
+            title: "Calls",
+            href: "/dashboard/calls",
+            icon: Phone,
+        },
+        {
+            title: "Call Logs",
+            href: "/dashboard/call-logs",
+            icon: PhoneCall,
         },
         {
             title: "Pipeline",
