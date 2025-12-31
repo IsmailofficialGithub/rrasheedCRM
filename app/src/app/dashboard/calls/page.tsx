@@ -47,11 +47,13 @@ export default function CallsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isConnecting, setIsConnecting] = useState<string | null>(null)
+  const [isUpdatingAll, setIsUpdatingAll] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
 
   const supabase = createClient()
+
 
   const fetchLeads = useCallback(async (pageNumber = 1) => {
     setIsLoading(true)
@@ -183,18 +185,15 @@ export default function CallsPage() {
       )
 
 
-      // Filter for senior positions only (Director, Chief, VP, President, CEO, etc.)
-      const seniorPositionKeywords = [
-        'director', 'chief', 'ceo', 'cfo', 'cto', 'coo', 'cmo', 'cio', 'chro',
-        'president', 'vp', 'vice president', 'head of', 'executive',
-        'managing director', 'general manager', 'owner', 'founder', 'partner', 'manager', 'head'
-      ]
 
+      // Filter to only show leads with actual names (containing comma)
+      // Example: "Nicole Carroll, Director" ✓  vs "CEO" ✗
       const filteredData = updatedLeads.filter(lead => {
         if (!lead.decision_maker_name) return false
-        const nameLower = lead.decision_maker_name.toLowerCase()
-        return seniorPositionKeywords.some(keyword => nameLower.includes(keyword))
+        // Only show if decision_maker_name contains a comma (Name, Position format)
+        return lead.decision_maker_name.includes(',')
       })
+
 
       setLeads(filteredData)
 
@@ -216,9 +215,21 @@ export default function CallsPage() {
   const handleConnect = async (lead: Lead) => {
     setIsConnecting(lead.id)
     try {
+      // Extract name from decision_maker_name (before comma if present)
+      let nameToSend = lead.company_name
+      if (lead.decision_maker_name) {
+        // If it contains a comma, get the part before the comma (the name)
+        if (lead.decision_maker_name.includes(',')) {
+          nameToSend = lead.decision_maker_name.split(',')[0].trim()
+        } else {
+          // Otherwise use the full decision_maker_name
+          nameToSend = lead.decision_maker_name
+        }
+      }
+
       const result = await triggerCallWebhook({
         id: lead.id,
-        name: lead.decision_maker_name || lead.company_name,
+        name: nameToSend,
         phone: lead.phone_number,
         company: lead.company_name,
         created_at: lead.created_at,
@@ -234,7 +245,7 @@ export default function CallsPage() {
       })
 
       if (result.success) {
-        toast.success(`Calling ${lead.decision_maker_name || lead.company_name}...`, {
+        toast.success(`Calling ${nameToSend}...`, {
           description: `Connecting to ${lead.phone_number}`,
         })
       } else {
@@ -251,7 +262,145 @@ export default function CallsPage() {
     }
   }
 
+  const handleUpdateAllPositions = async () => {
+    setIsUpdatingAll(true)
+    try {
+      // Position limits per company
+      const positionLimits: { [key: string]: number } = {
+        'Owner': 1,
+        'CEO': 1,
+        'President': 2,
+        'General Manager': 4,
+        'Director of Operations': 4,
+        'Manager': 999
+      }
+
+      // Weighted positions for better distribution
+      const positionWeights: { [key: string]: number } = {
+        'Owner': 5,
+        'CEO': 8,
+        'President': 12,
+        'General Manager': 20,
+        'Director of Operations': 20,
+        'Manager': 35
+      }
+
+      // Helper function to get weighted random position
+      const getWeightedRandomPosition = (availablePositions: string[]): string => {
+        const totalWeight = availablePositions.reduce((sum, pos) => sum + positionWeights[pos], 0)
+        let random = Math.random() * totalWeight
+
+        for (const position of availablePositions) {
+          random -= positionWeights[position]
+          if (random <= 0) {
+            return position
+          }
+        }
+        return availablePositions[availablePositions.length - 1]
+      }
+
+      // Fetch ALL leads with phone numbers from database
+      const { data: allLeads } = await supabase
+        .from('leads')
+        .select('*')
+        .not('phone_number', 'is', null)
+        .order('company_name', { ascending: true })
+
+      if (!allLeads || allLeads.length === 0) {
+        toast.error('No leads found to update')
+        return
+      }
+
+      // Track positions count per company
+      const companyPositions = new Map<string, Map<string, number>>()
+
+      // Helper function to extract position from decision_maker_name
+      const extractPosition = (decisionMakerName: string): string | null => {
+        if (!decisionMakerName || decisionMakerName.trim() === '' || decisionMakerName.trim() === '-') {
+          return null
+        }
+
+        // If it contains a comma, extract the position part (after comma)
+        if (decisionMakerName.includes(',')) {
+          const parts = decisionMakerName.split(',')
+          return parts[parts.length - 1].trim()
+        }
+
+        // Otherwise, it's just the position itself
+        return decisionMakerName.trim()
+      }
+
+      // First, collect existing positions for each company
+      allLeads.forEach(lead => {
+        const position = extractPosition(lead.decision_maker_name)
+        if (position) {
+          if (!companyPositions.has(lead.company_name)) {
+            companyPositions.set(lead.company_name, new Map())
+          }
+          const positions = companyPositions.get(lead.company_name)!
+          const currentCount = positions.get(position) || 0
+          positions.set(position, currentCount + 1)
+        }
+      })
+
+
+      let updatedCount = 0
+
+      // Process each lead
+      for (const lead of allLeads) {
+        // If decision_maker_name is null, empty, or just "-"
+        if (!lead.decision_maker_name || lead.decision_maker_name.trim() === '' || lead.decision_maker_name.trim() === '-') {
+          // Get positions already used for this company
+          const usedPositions = companyPositions.get(lead.company_name) || new Map()
+
+          // Find available positions for this company (based on limits)
+          const availablePositions = Object.keys(positionLimits).filter(pos => {
+            const currentCount = usedPositions.get(pos) || 0
+            return currentCount < positionLimits[pos]
+          })
+
+          // If no positions available, skip this lead
+          if (availablePositions.length === 0) {
+            continue
+          }
+
+          // Pick a weighted random available position
+          const randomPosition = getWeightedRandomPosition(availablePositions)
+
+          // Update the database
+          const { error: updateError } = await supabase
+            .from('leads')
+            .update({ decision_maker_name: randomPosition })
+            .eq('id', lead.id)
+
+          if (!updateError) {
+            // Mark this position as used for this company
+            if (!companyPositions.has(lead.company_name)) {
+              companyPositions.set(lead.company_name, new Map())
+            }
+            const positions = companyPositions.get(lead.company_name)!
+            const currentCount = positions.get(randomPosition) || 0
+            positions.set(randomPosition, currentCount + 1)
+            updatedCount++
+          }
+        }
+      }
+
+      toast.success(`Successfully updated ${updatedCount} leads with positions!`)
+      // Refresh the current page
+      fetchLeads(page)
+    } catch (err: any) {
+      toast.error('Error updating positions', {
+        description: err.message,
+      })
+    } finally {
+      setIsUpdatingAll(false)
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
+
+
 
   return (
     <div className="flex-1 space-y-6 p-8 animate-in fade-in duration-500 overflow-y-auto max-h-screen">
@@ -265,10 +414,23 @@ export default function CallsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+          {/* <Button
+            onClick={handleUpdateAllPositions}
+            disabled={isUpdatingAll}
+            className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+          >
+            {isUpdatingAll ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              <>
                 <PhoneCall className="mr-2 h-4 w-4" />
-                New Call
-            </Button> */}
+                Update All Positions
+              </>
+            )}
+          </Button > */}
         </div>
       </div>
 
