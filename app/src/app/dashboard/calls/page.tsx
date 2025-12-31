@@ -28,13 +28,13 @@ const getUrlHostName = (url: string | null) => {
   if (!url) return null;
   try {
     let hostname = new URL(url).hostname;
-    hostname=hostname.replace('www.', '');
-    hostname=hostname.replace('.com', '');
-    hostname=hostname.replace('.in', '');
-    hostname=hostname.replace('.co', '');
-    hostname=hostname.replace('.net', '');
-    hostname=hostname.replace('.org', '');
-    hostname=hostname.replace('.org', '');
+    hostname = hostname.replace('www.', '');
+    hostname = hostname.replace('.com', '');
+    hostname = hostname.replace('.in', '');
+    hostname = hostname.replace('.co', '');
+    hostname = hostname.replace('.net', '');
+    hostname = hostname.replace('.org', '');
+    hostname = hostname.replace('.org', '');
     return hostname;
   } catch (e) {
     return "Unknown";
@@ -58,6 +58,7 @@ export default function CallsPage() {
     const from = (pageNumber - 1) * ITEMS_PER_PAGE
     const to = from + ITEMS_PER_PAGE - 1
 
+    // Fetch leads with phone numbers (including those without decision_maker_name)
     let query = supabase
       .from('leads')
       .select('*', { count: 'exact' })
@@ -72,8 +73,135 @@ export default function CallsPage() {
     const { data, error, count } = await query
 
     if (data) {
-      setLeads(data)
-      if (count !== null) setTotalCount(count)
+      // Position limits per company
+      const positionLimits: { [key: string]: number } = {
+        'Owner': 1,
+        'CEO': 1,
+        'President': 2,
+        'General Manager': 4,
+        'Director of Operations': 4,
+        'Manager': 999 // Unlimited
+      }
+
+      // Weighted positions for better distribution (higher weight = more likely)
+      const positionWeights: { [key: string]: number } = {
+        'Owner': 5,
+        'CEO': 8,
+        'President': 12,
+        'General Manager': 20,
+        'Director of Operations': 20,
+        'Manager': 35
+      }
+
+      // Track positions count per company
+      const companyPositions = new Map<string, Map<string, number>>()
+
+      // Get unique company names from current page data
+      const companyNames = [...new Set(data.map(lead => lead.company_name))]
+
+      // Fetch ALL existing positions for these companies from the entire database
+      const { data: allCompanyLeads } = await supabase
+        .from('leads')
+        .select('company_name, decision_maker_name')
+        .in('company_name', companyNames)
+        .not('decision_maker_name', 'is', null)
+        .neq('decision_maker_name', '')
+        .neq('decision_maker_name', '-')
+
+      // Collect existing positions for each company from ALL database records
+      if (allCompanyLeads) {
+        allCompanyLeads.forEach(lead => {
+          if (lead.decision_maker_name && lead.decision_maker_name.trim() !== '' && lead.decision_maker_name.trim() !== '-') {
+            if (!companyPositions.has(lead.company_name)) {
+              companyPositions.set(lead.company_name, new Map())
+            }
+            const positions = companyPositions.get(lead.company_name)!
+            const currentCount = positions.get(lead.decision_maker_name) || 0
+            positions.set(lead.decision_maker_name, currentCount + 1)
+          }
+        })
+      }
+
+
+      // Helper function to get weighted random position
+      const getWeightedRandomPosition = (availablePositions: string[]): string => {
+        const totalWeight = availablePositions.reduce((sum, pos) => sum + positionWeights[pos], 0)
+        let random = Math.random() * totalWeight
+
+        for (const position of availablePositions) {
+          random -= positionWeights[position]
+          if (random <= 0) {
+            return position
+          }
+        }
+        return availablePositions[availablePositions.length - 1]
+      }
+
+      // Process leads and add random positions if missing
+      const updatedLeads = await Promise.all(
+        data.map(async (lead) => {
+          // If decision_maker_name is null, empty, or just "-"
+          if (!lead.decision_maker_name || lead.decision_maker_name.trim() === '' || lead.decision_maker_name.trim() === '-') {
+            // Get positions already used for this company
+            const usedPositions = companyPositions.get(lead.company_name) || new Map()
+
+            // Find available positions for this company (based on limits)
+            const availablePositions = Object.keys(positionLimits).filter(pos => {
+              const currentCount = usedPositions.get(pos) || 0
+              return currentCount < positionLimits[pos]
+            })
+
+            // If no positions available, skip this lead
+            if (availablePositions.length === 0) {
+              return lead
+            }
+
+            // Pick a weighted random available position
+            const randomPosition = getWeightedRandomPosition(availablePositions)
+
+            // Update the database
+            const { data: updatedData, error: updateError } = await supabase
+              .from('leads')
+              .update({ decision_maker_name: randomPosition })
+              .eq('id', lead.id)
+              .select()
+              .single()
+
+            if (updatedData && !updateError) {
+              // Mark this position as used for this company
+              if (!companyPositions.has(lead.company_name)) {
+                companyPositions.set(lead.company_name, new Map())
+              }
+              const positions = companyPositions.get(lead.company_name)!
+              const currentCount = positions.get(randomPosition) || 0
+              positions.set(randomPosition, currentCount + 1)
+              return updatedData
+            }
+          }
+          return lead
+        })
+      )
+
+
+      // Filter for senior positions only (Director, Chief, VP, President, CEO, etc.)
+      const seniorPositionKeywords = [
+        'director', 'chief', 'ceo', 'cfo', 'cto', 'coo', 'cmo', 'cio', 'chro',
+        'president', 'vp', 'vice president', 'head of', 'executive',
+        'managing director', 'general manager', 'owner', 'founder', 'partner', 'manager', 'head'
+      ]
+
+      const filteredData = updatedLeads.filter(lead => {
+        if (!lead.decision_maker_name) return false
+        const nameLower = lead.decision_maker_name.toLowerCase()
+        return seniorPositionKeywords.some(keyword => nameLower.includes(keyword))
+      })
+
+      setLeads(filteredData)
+
+      // Get the actual total count from database (all leads with phone numbers)
+      if (count !== null) {
+        setTotalCount(count)
+      }
     }
     setIsLoading(false)
   }, [searchTerm, supabase])
@@ -104,7 +232,7 @@ export default function CallsPage() {
         phone_number: lead.phone_number,
         job_posting_platform: lead.job_posting_url ? getUrlHostName(lead.job_posting_url) : null,
       })
-      
+
       if (result.success) {
         toast.success(`Calling ${lead.decision_maker_name || lead.company_name}...`, {
           description: `Connecting to ${lead.phone_number}`,
@@ -137,13 +265,13 @@ export default function CallsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-            {/* <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+          {/* <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
                 <PhoneCall className="mr-2 h-4 w-4" />
                 New Call
             </Button> */}
         </div>
       </div>
-      
+
       <Card className="overflow-hidden border-none shadow-2xl bg-card/60 backdrop-blur-md ring-1 ring-border/50">
         <CardHeader className="pb-3 border-b bg-muted/20">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -154,139 +282,139 @@ export default function CallsPage() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-                <div className="relative group">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input
-                        placeholder="Search leads..."
-                        className="w-[200px] lg:w-[300px] pl-8 bg-background/50 border-muted focus-visible:ring-primary/20 focus-visible:border-primary transition-all text-sm h-9"
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value)
-                            setPage(1)
-                        }}
-                    />
-                </div>
-                <Button variant="outline" size="sm" className="h-9 hover:bg-primary/10 hover:text-primary transition-colors">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                </Button>
+              <div className="relative group">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Input
+                  placeholder="Search leads..."
+                  className="w-[200px] lg:w-[300px] pl-8 bg-background/50 border-muted focus-visible:ring-primary/20 focus-visible:border-primary transition-all text-sm h-9"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value)
+                    setPage(1)
+                  }}
+                />
+              </div>
+              <Button variant="outline" size="sm" className="h-9 hover:bg-primary/10 hover:text-primary transition-colors">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="relative min-h-[400px]">
             {isLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-sm z-10 transition-opacity">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+              <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-sm z-10 transition-opacity">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
             ) : null}
-            
+
             <Table>
-                <TableHeader className="bg-muted/30 sticky top-0 z-10">
+              <TableHeader className="bg-muted/30 sticky top-0 z-10">
                 <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[80px] pl-6 font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">ID</TableHead>
-                    <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Name</TableHead>
-                    <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Company</TableHead>
-                    <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Email</TableHead>
-                    <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Job Link</TableHead>
-                    <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Phone</TableHead>
-                    <TableHead className="text-right pr-6 font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Actions</TableHead>
+                  <TableHead className="w-[80px] pl-6 font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">ID</TableHead>
+                  <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Name</TableHead>
+                  <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Company</TableHead>
+                  <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Email</TableHead>
+                  <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Job Link</TableHead>
+                  <TableHead className="font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Phone</TableHead>
+                  <TableHead className="text-right pr-6 font-semibold uppercase text-[10px] tracking-wider text-muted-foreground">Actions</TableHead>
                 </TableRow>
-                </TableHeader>
-                <TableBody>
+              </TableHeader>
+              <TableBody>
                 {leads.length > 0 ? (
-                    leads.map((lead) => (
-                    <TableRow 
-                        key={lead.id} 
-                        className="group border-muted/30 hover:bg-primary/5 transition-all duration-300"
+                  leads.map((lead) => (
+                    <TableRow
+                      key={lead.id}
+                      className="group border-muted/30 hover:bg-primary/5 transition-all duration-300"
                     >
-                        <TableCell className="pl-6 font-mono text-[10px] text-muted-foreground/70">
-                            {lead.id.slice(0, 8).toUpperCase()}
-                        </TableCell>
-                        <TableCell className="py-4">
-                            <div className="flex items-center gap-3">
-                               {
-                                lead.decision_maker_name?
-                                <div className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full">
-                                    <div className="flex h-full w-full items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
-                                        {lead.decision_maker_name?.split(' ').slice(0, 2).map(n => n[0]).join('') || '24'}
-                                    </div>
+                      <TableCell className="pl-6 font-mono text-[10px] text-muted-foreground/70">
+                        {lead.id.slice(0, 8).toUpperCase()}
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3">
+                          {
+                            lead.decision_maker_name ?
+                              <div className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full">
+                                <div className="flex h-full w-full items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
+                                  {lead.decision_maker_name?.split(' ').slice(0, 2).map(n => n[0]).join('') || '24'}
                                 </div>
-                                :""
-                               }
-                            <div className="flex flex-col">
-                                <span className="text-sm font-semibold leading-none group-hover:text-primary transition-colors">
-                                    {lead.decision_maker_name || ''}
-                                </span>
-                                {lead.decision_maker_name && (
-                                    <span className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                                       at {lead.company_name}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        </TableCell>
-                        <TableCell>
-                            <span className="text-sm text-muted-foreground/80 hover:text-primary transition-colors truncate max-w-[150px] inline-block">
-                                {lead.company_name || "-"}
+                              </div>
+                              : ""
+                          }
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold leading-none group-hover:text-primary transition-colors">
+                              {lead.decision_maker_name || ''}
                             </span>
-                        </TableCell>
-                        <TableCell>
-                            <span className="text-sm text-muted-foreground/80 hover:text-primary transition-colors truncate max-w-[150px] inline-block">
-                                {lead.email || "-"}
-                            </span>
-                        </TableCell>
-                        <TableCell>
-                            {lead.job_posting_url ? (
-                                <a 
-                                    href={lead.job_posting_url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50 text-[11px] font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all group/link"
-                                >
-                                    View Post
-                                    <ArrowUpRight className="h-3 w-3 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
-                                </a>
-                            ) : (
-                                <span className="text-muted-foreground/50 text-xs">-</span>
+                            {lead.decision_maker_name && (
+                              <span className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                                at {lead.company_name}
+                              </span>
                             )}
-                        </TableCell>
-                        <TableCell>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground/80 hover:text-primary transition-colors truncate max-w-[150px] inline-block">
+                          {lead.company_name || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground/80 hover:text-primary transition-colors truncate max-w-[150px] inline-block">
+                          {lead.email || "-"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {lead.job_posting_url ? (
+                          <a
+                            href={lead.job_posting_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50 text-[11px] font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all group/link"
+                          >
+                            View Post
+                            <ArrowUpRight className="h-3 w-3 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground/50 text-xs">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2 group-hover:translate-x-1 transition-transform">
-                            <span className="text-sm text-foreground/80 font-medium">{lead.phone_number}</span>
+                          <span className="text-sm text-foreground/80 font-medium">{lead.phone_number}</span>
                         </div>
-                        </TableCell>
-                        <TableCell className="text-right pr-6">
-                        <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            disabled={isConnecting === lead.id}
-                            onClick={() => handleConnect(lead)}
-                            className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-primary/10 hover:bg-primary hover:text-white text-primary rounded-full px-5 h-9 font-medium"
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={isConnecting === lead.id}
+                          onClick={() => handleConnect(lead)}
+                          className="opacity-0 group-hover:opacity-100 transition-all duration-300 bg-primary/10 hover:bg-primary hover:text-white text-primary rounded-full px-5 h-9 font-medium"
                         >
-                            {isConnecting === lead.id ? (
-                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                                <PhoneCall className="mr-2 h-3.5 w-3.5" />
-                            )}
-                            {isConnecting === lead.id ? "Connecting..." : "Connect"}
+                          {isConnecting === lead.id ? (
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <PhoneCall className="mr-2 h-3.5 w-3.5" />
+                          )}
+                          {isConnecting === lead.id ? "Connecting..." : "Connect"}
                         </Button>
-                        </TableCell>
+                      </TableCell>
                     </TableRow>
-                    ))
+                  ))
                 ) : !isLoading && (
-                    <TableRow>
-                        <TableCell colSpan={6} className="h-64 text-center text-muted-foreground">
-                            No leads with phone numbers found.
-                        </TableCell>
-                    </TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-64 text-center text-muted-foreground">
+                      No leads with phone numbers found.
+                    </TableCell>
+                  </TableRow>
                 )}
-                </TableBody>
+              </TableBody>
 
             </Table>
           </div>
-          
-          <CustomPagination 
+
+          <CustomPagination
             currentPage={page}
             totalPages={totalPages}
             onPageChange={setPage}
@@ -296,7 +424,7 @@ export default function CallsPage() {
           />
         </CardContent>
       </Card>
-      
+
       {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4">
         {[
             { label: "Total Leads", value: totalCount.toLocaleString(), change: "+5.2%", color: "text-primary" },
