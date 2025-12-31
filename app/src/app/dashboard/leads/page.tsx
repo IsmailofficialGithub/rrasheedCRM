@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, Upload, Loader2, Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react"
@@ -47,9 +47,20 @@ export default function LeadsPage() {
     const [page, setPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
 
+    // Cache to track which pages have been loaded
+    const loadedPagesRef = useRef<Set<number>>(new Set())
+    const cachedDataRef = useRef<Map<number, Lead[]>>(new Map())
+
     const supabase = createClient()
 
-    const fetchLeads = async (pageNumber = 1) => {
+    const fetchLeads = async (pageNumber = 1, forceRefresh = false) => {
+        // Check if this page has already been loaded (unless force refresh)
+        if (!forceRefresh && loadedPagesRef.current.has(pageNumber) && cachedDataRef.current.has(pageNumber)) {
+            setLeads(cachedDataRef.current.get(pageNumber)!)
+            setIsLoading(false)
+            return
+        }
+
         setIsLoading(true)
         const from = (pageNumber - 1) * ITEMS_PER_PAGE
         const to = from + ITEMS_PER_PAGE - 1
@@ -61,6 +72,10 @@ export default function LeadsPage() {
             .range(from, to)
 
         if (data) {
+            // Cache the data
+            cachedDataRef.current.set(pageNumber, data)
+            loadedPagesRef.current.add(pageNumber)
+
             setLeads(data)
             if (count !== null) setTotalCount(count)
         }
@@ -68,8 +83,14 @@ export default function LeadsPage() {
     }
 
     useEffect(() => {
+        // Clear cache when search term changes
+        if (searchTerm) {
+            loadedPagesRef.current.clear()
+            cachedDataRef.current.clear()
+        }
         fetchLeads(page)
-    }, [page])
+    }, [page, searchTerm])
+
 
     const handleRefresh = () => {
         fetchLeads(page)
@@ -82,16 +103,14 @@ export default function LeadsPage() {
         return trimmedValue !== '' && trimmedValue !== 'nan' && trimmedValue !== '-' && trimmedValue !== 'null'
     }
 
-    // Helper function to check if a lead has all required fields filled
+    // Helper function to check if a lead has required fields filled
+    // Only show leads with actual names (Name, Position format with comma) and phone number
     const isCompleteLead = (lead: Lead): boolean => {
         return (
-            isValidField(lead.company_name) &&
-            isValidField(lead.job_posting_url) &&
-            isValidField(lead.city_state) &&
-            isValidField(lead.salary_range) &&
-            isValidField(lead.decision_maker_name) &&
-            isValidField(lead.email) &&
-            isValidField(lead.phone_number)
+            isValidField(lead.phone_number) &&
+            lead.decision_maker_name !== null &&
+            lead.decision_maker_name !== undefined &&
+            lead.decision_maker_name.includes(',') // Must have comma (Name, Position format)
         )
     }
 
