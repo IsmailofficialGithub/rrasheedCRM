@@ -23,6 +23,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { createClient } from "@/utils/supabase/client"
+import { CustomPagination } from "@/components/ui/pagination-custom"
 
 interface Lead {
     id: string
@@ -176,32 +177,14 @@ export default function LeadsPage() {
                                 </table>
                             </div>
 
-                            {/* Pagination Controls */}
-                            <div className="shrink-0 flex items-center justify-between p-4 border-t bg-background/50">
-                                <p className="text-sm text-muted-foreground">
-                                    Page {page} of {totalPages}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={page === 1 || isLoading}
-                                    >
-                                        <ChevronLeft className="h-4 w-4 mr-2" />
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={page >= totalPages || isLoading}
-                                    >
-                                        Next
-                                        <ChevronRight className="h-4 w-4 ml-2" />
-                                    </Button>
-                                </div>
-                            </div>
+                            <CustomPagination
+                                currentPage={page}
+                                totalPages={totalPages}
+                                onPageChange={setPage}
+                                totalItems={totalCount}
+                                itemsPerPage={ITEMS_PER_PAGE}
+                                isLoading={isLoading}
+                            />
                         </div>
                     )}
                 </CardContent>
