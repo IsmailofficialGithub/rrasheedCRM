@@ -82,16 +82,14 @@ export default function LeadsPage() {
         return trimmedValue !== '' && trimmedValue !== 'nan' && trimmedValue !== '-' && trimmedValue !== 'null'
     }
 
-    // Helper function to check if a lead has all required fields filled
+    // Helper function to check if a lead has required fields filled
+    // Only show leads with actual names (Name, Position format with comma) and phone number
     const isCompleteLead = (lead: Lead): boolean => {
         return (
-            isValidField(lead.company_name) &&
-            isValidField(lead.job_posting_url) &&
-            isValidField(lead.city_state) &&
-            isValidField(lead.salary_range) &&
-            isValidField(lead.decision_maker_name) &&
-            isValidField(lead.email) &&
-            isValidField(lead.phone_number)
+            isValidField(lead.phone_number) &&
+            lead.decision_maker_name !== null &&
+            lead.decision_maker_name !== undefined &&
+            lead.decision_maker_name.includes(',') // Must have comma (Name, Position format)
         )
     }
 
