@@ -75,10 +75,32 @@ export default function LeadsPage() {
         fetchLeads(page)
     }
 
-    const filteredLeads = leads.filter(lead =>
-        lead.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    // Helper function to check if a field is valid (not empty, null, "nan", or "-")
+    const isValidField = (value: string | null | undefined): boolean => {
+        if (!value) return false
+        const trimmedValue = value.toString().trim().toLowerCase()
+        return trimmedValue !== '' && trimmedValue !== 'nan' && trimmedValue !== '-' && trimmedValue !== 'null'
+    }
+
+    // Helper function to check if a lead has all required fields filled
+    const isCompleteLead = (lead: Lead): boolean => {
+        return (
+            isValidField(lead.company_name) &&
+            isValidField(lead.job_posting_url) &&
+            isValidField(lead.city_state) &&
+            isValidField(lead.salary_range) &&
+            isValidField(lead.decision_maker_name) &&
+            isValidField(lead.email) &&
+            isValidField(lead.phone_number)
+        )
+    }
+
+    const filteredLeads = leads
+        .filter(lead => isCompleteLead(lead)) // First filter: only complete leads
+        .filter(lead => // Second filter: search term
+            lead.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
 
     const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
 
