@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,10 +52,21 @@ export default function CallsPage() {
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
 
+  // Cache to track which pages have been loaded
+  const loadedPagesRef = useRef<Set<number>>(new Set())
+  const cachedDataRef = useRef<Map<number, Lead[]>>(new Map())
+
   const supabase = createClient()
 
 
-  const fetchLeads = useCallback(async (pageNumber = 1) => {
+  const fetchLeads = useCallback(async (pageNumber = 1, forceRefresh = false) => {
+    // Check if this page has already been loaded (unless force refresh)
+    if (!forceRefresh && loadedPagesRef.current.has(pageNumber) && cachedDataRef.current.has(pageNumber)) {
+      setLeads(cachedDataRef.current.get(pageNumber)!)
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     const from = (pageNumber - 1) * ITEMS_PER_PAGE
     const to = from + ITEMS_PER_PAGE - 1
@@ -110,16 +121,33 @@ export default function CallsPage() {
         .neq('decision_maker_name', '')
         .neq('decision_maker_name', '-')
 
+      // Helper function to extract position from decision_maker_name
+      const extractPosition = (decisionMakerName: string): string | null => {
+        if (!decisionMakerName || decisionMakerName.trim() === '' || decisionMakerName.trim() === '-') {
+          return null
+        }
+
+        // If it contains a comma, extract the position part (after comma)
+        if (decisionMakerName.includes(',')) {
+          const parts = decisionMakerName.split(',')
+          return parts[parts.length - 1].trim()
+        }
+
+        // Otherwise, it's just the position itself
+        return decisionMakerName.trim()
+      }
+
       // Collect existing positions for each company from ALL database records
       if (allCompanyLeads) {
         allCompanyLeads.forEach(lead => {
-          if (lead.decision_maker_name && lead.decision_maker_name.trim() !== '' && lead.decision_maker_name.trim() !== '-') {
+          const position = extractPosition(lead.decision_maker_name)
+          if (position) {
             if (!companyPositions.has(lead.company_name)) {
               companyPositions.set(lead.company_name, new Map())
             }
             const positions = companyPositions.get(lead.company_name)!
-            const currentCount = positions.get(lead.decision_maker_name) || 0
-            positions.set(lead.decision_maker_name, currentCount + 1)
+            const currentCount = positions.get(position) || 0
+            positions.set(position, currentCount + 1)
           }
         })
       }
@@ -197,6 +225,10 @@ export default function CallsPage() {
 
       setLeads(filteredData)
 
+      // Cache the data
+      cachedDataRef.current.set(pageNumber, filteredData)
+      loadedPagesRef.current.add(pageNumber)
+
       // Get the actual total count from database (all leads with phone numbers)
       if (count !== null) {
         setTotalCount(count)
@@ -207,6 +239,11 @@ export default function CallsPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Clear cache when search term changes
+      if (searchTerm) {
+        loadedPagesRef.current.clear()
+        cachedDataRef.current.clear()
+      }
       fetchLeads(page)
     }, 300)
     return () => clearTimeout(timer)
