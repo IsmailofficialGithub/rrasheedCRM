@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import {
@@ -11,194 +11,81 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Building2, LayoutGrid, List, Ban, Plus, Globe, Facebook, Linkedin } from "lucide-react"
+import { Building2, LayoutGrid, List, Ban, Plus, Globe, Facebook, Linkedin, Loader2 } from "lucide-react"
+import { createClient } from "@/utils/supabase/client"
 
-// Dummy data based on the screenshot
-const COMPANIES = [
-    {
-        id: 1,
-        name: "Pacific Hotel",
-        locations: 0,
-        icpScore: "0",
-        employees: 120,
-        revenue: "11,500,000",
-        address: "Seattle, Washington, United States",
-        website: true,
-        linkedin: true,
-        facebook: true
-    },
-    {
-        id: 2,
-        name: "El Tapatios Mexican Restaurant",
-        locations: 0,
-        icpScore: "0",
-        employees: 11,
-        revenue: "—",
-        address: "608 Austin Ave, Waco, Texas, United States",
-        website: true,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 3,
-        name: "Hotel Cashiers",
-        locations: 0,
-        icpScore: "0",
-        employees: 11,
-        revenue: "—",
-        address: "7 Slab Town Rd, Cashiers, North Carolina",
-        website: true,
-        linkedin: true,
-        facebook: true
-    },
-    {
-        id: 4,
-        name: "The Ritz-Carlton, Dallas",
-        locations: 0,
-        icpScore: "0",
-        employees: 58,
-        revenue: "—",
-        address: "Dallas, Texas, United States",
-        website: false,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 5,
-        name: "Top Malioboro Hotel",
-        locations: 0,
-        icpScore: "0",
-        employees: 80,
-        revenue: "—",
-        address: "United States",
-        website: true,
-        linkedin: true,
-        facebook: true
-    },
-    {
-        id: 6,
-        name: "Restaurant Manager POS",
-        locations: 0,
-        icpScore: "0",
-        employees: 36,
-        revenue: "—",
-        address: "Silver Spring, Maryland, United States",
-        website: false,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 7,
-        name: "Edge O Dells Bar and Restaurant",
-        locations: 0,
-        icpScore: "0",
-        employees: 11,
-        revenue: "—",
-        address: "N555 US-12, Wisconsin Dells, Wisconsin",
-        website: true,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 8,
-        name: "Duckstache Hospitality",
-        locations: 0,
-        icpScore: "0",
-        employees: 13,
-        revenue: "—",
-        address: "3510 White Oak Drive, Houston, Texas",
-        website: true,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 9,
-        name: "ATOM Hospitality Group",
-        locations: 0,
-        icpScore: "0",
-        employees: 13,
-        revenue: "—",
-        address: "1120 Madison Ave, Mankato, Minnesota",
-        website: true,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 10,
-        name: "Brambly Park",
-        locations: 0,
-        icpScore: "0",
-        employees: 14,
-        revenue: "—",
-        address: "1708 Belleville St, Richmond, Virginia",
-        website: true,
-        linkedin: true,
-        facebook: true
-    },
-    {
-        id: 11,
-        name: "SkiCNY",
-        locations: 0,
-        icpScore: "0",
-        employees: 13,
-        revenue: "3,000,000",
-        address: "Syracuse, New York, United States",
-        website: true,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 12,
-        name: "The Chloe",
-        locations: 0,
-        icpScore: "0",
-        employees: 11,
-        revenue: "—",
-        address: "4125 St Charles Ave, New Orleans",
-        website: true,
-        linkedin: true,
-        facebook: false
-    },
-    {
-        id: 13,
-        name: "Vienna Inn",
-        locations: 0,
-        icpScore: "0",
-        employees: 19,
-        revenue: "—",
-        address: "120 Maple Ave E, Vienna, Virginia",
-        website: true,
-        linkedin: true,
-        facebook: true
-    },
-    {
-        id: 14,
-        name: "Morimoto PA",
-        locations: 0,
-        icpScore: "0",
-        employees: 14,
-        revenue: "—",
-        address: "723 Chestnut St, Philadelphia, Pennsylvania",
-        website: true,
-        linkedin: true,
-        facebook: true
-    },
-    {
-        id: 15,
-        name: "DoubleTree by Hilton Charlotte... ",
-        locations: 0,
-        icpScore: "0",
-        employees: 12,
-        revenue: "—",
-        address: "895 W Trade St, Charlotte, North Carolina",
-        website: true,
-        linkedin: true,
-        facebook: true
-    }
-]
+interface Company {
+    id: string | number
+    name: string
+    locations: number
+    icpScore: string
+    employees: number | string
+    revenue: string
+    address: string
+    website: boolean
+    linkedin: boolean
+    facebook: boolean
+}
 
 export default function CompaniesPage() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+    const [companies, setCompanies] = useState<Company[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [totalCount, setTotalCount] = useState(0)
+
+    const supabase = createClient()
+
+    useEffect(() => {
+        const fetchCompanies = async () => {
+            setIsLoading(true)
+            try {
+                // Fetch unique company names and their data from leads table
+                const { data, error } = await supabase
+                    .from('leads')
+                    .select('company_name, city_state')
+                
+                if (error) throw error
+
+                if (data) {
+                    // Group by company name to get unique companies
+                    const companyMap = new Map<string, Company>()
+                    
+                    data.forEach((lead, index) => {
+                        if (!lead.company_name) return
+
+                        const name = lead.company_name
+                        if (!companyMap.has(name)) {
+                            companyMap.set(name, {
+                                id: index + 1,
+                                name: name,
+                                locations: 1,
+                                icpScore: "0",
+                                employees: "—",
+                                revenue: "—",
+                                address: lead.city_state || "Unknown",
+                                website: false,
+                                linkedin: true,
+                                facebook: false
+                            })
+                        } else {
+                            const existing = companyMap.get(name)!
+                            existing.locations += 1
+                        }
+                    })
+
+                    const uniqueCompanies = Array.from(companyMap.values())
+                    setCompanies(uniqueCompanies)
+                    setTotalCount(uniqueCompanies.length)
+                }
+            } catch (err) {
+                console.error("Error fetching companies:", err)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchCompanies()
+    }, [supabase])
 
     return (
         <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500">
@@ -208,7 +95,7 @@ export default function CompaniesPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-primary flex items-center gap-2">
                         Companies
                         <span className="text-sm font-normal text-muted-foreground self-end mb-1">
-                            (80) Total Companies
+                            ({totalCount}) Total Companies
                         </span>
                     </h1>
                     <p className="text-muted-foreground text-sm">Manage your company accounts</p>
@@ -244,10 +131,18 @@ export default function CompaniesPage() {
             </div>
 
             {/* Content */}
-            {viewMode === "grid" ? (
+            {isLoading ? (
+                <div className="flex flex-1 items-center justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : companies.length === 0 ? (
+                <div className="flex flex-1 items-center justify-center p-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                    No companies found.
+                </div>
+            ) : viewMode === "grid" ? (
                 /* Grid View */
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-6">
-                    {COMPANIES.map((company) => (
+                    {companies.map((company) => (
                         <Card key={company.id} className="flex flex-col shadow-sm">
                             <CardHeader className="flex flex-row items-center gap-3 p-4 pb-2">
                                 <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
@@ -309,9 +204,9 @@ export default function CompaniesPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {COMPANIES.map((company) => (
+                                {companies.map((company, index) => (
                                     <TableRow key={company.id} className="hover:bg-muted/30 transition-colors">
-                                        <TableCell className="text-blue-500 font-medium text-xs text-center py-4">{company.id}</TableCell>
+                                        <TableCell className="text-blue-500 font-medium text-xs text-center py-4">{index+1}</TableCell>
                                         <TableCell className="py-4">
                                             <div className="flex items-center gap-2">
                                                 <Building2 className="h-4 w-4 text-muted-foreground opacity-50" />
