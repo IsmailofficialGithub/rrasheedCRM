@@ -38,9 +38,9 @@ export default function DashboardPage() {
                     .from('calls_log')
                     .select('*', { count: 'exact', head: true })
 
-                // Fetch Responses count
-                const { count: responsesCount } = await supabase
-                    .from('responses')
+                // Fetch Generated Leads count
+                const { count: generatedLeadsCount } = await supabase
+                    .from('generated_leads')
                     .select('*', { count: 'exact', head: true })
 
                 // Fetch Recent Leads
@@ -54,7 +54,7 @@ export default function DashboardPage() {
                     totalLeads: leadsCount || 0,
                     totalCompanies: uniqueCompanies || 0,
                     totalCalls: callsCount || 0,
-                    totalResponses: responsesCount || 0,
+                    totalResponses: generatedLeadsCount || 0,
                     recentLeads: recentLeads || []
                 })
             } catch (err: any) {
@@ -89,7 +89,7 @@ export default function DashboardPage() {
                     { title: "Total Leads", value: stats.totalLeads.toLocaleString(), change: "All active leads", icon: <Users className="h-4 w-4" /> },
                     { title: "Companies", value: stats.totalCompanies.toLocaleString(), change: "Unique organizations", icon: <Building2 className="h-4 w-4" /> },
                     { title: "Total Calls", value: stats.totalCalls.toLocaleString(), change: "Outbound call logs", icon: <Phone className="h-4 w-4" /> },
-                    { title: "AI Responses", value: stats.totalResponses.toLocaleString(), change: "Generated outreach", icon: <Mail className="h-4 w-4" /> }
+                    { title: "Generated Leads", value: stats.totalResponses.toLocaleString(), change: "With voice & transcript", icon: <Mail className="h-4 w-4" /> }
                 ].map((item, i) => (
                     <Card key={i} className="hover:scale-[1.01] transition-transform duration-200 border shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -113,14 +113,14 @@ export default function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-4 shadow-sm border">
                     <CardHeader>
-                        <CardTitle>Outreach Performance</CardTitle>
-                        <CardDescription>Activity breakdown for the current period.</CardDescription>
+                        <CardTitle>Workflow Overview</CardTitle>
+                        <CardDescription>Your CRM workflow at a glance.</CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
                         <div className="h-[300px] flex items-center justify-center bg-muted/20 rounded-md border border-dashed border-muted-foreground/30 m-4 mt-0">
                             <div className="flex flex-col items-center gap-2">
-                                <span className="text-muted-foreground text-sm font-medium">Activity Chart Visualization</span>
-                                <span className="text-[10px] text-muted-foreground">(Requires Charting Library Installation)</span>
+                                <span className="text-muted-foreground text-sm font-medium">Workflow Activity</span>
+                                <span className="text-[10px] text-muted-foreground">Track your lead generation and call activities</span>
                             </div>
                         </div>
                     </CardContent>

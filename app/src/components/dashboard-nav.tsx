@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Target, Mail, CornerUpLeft, MessageSquare, Calendar, Building2, Users, TrendingUp, Phone, PhoneCall } from "lucide-react"
+import { HelpCircle, Users, PhoneCall, FileText, List } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 // import { Button } from "@/components/ui/button"
@@ -12,34 +12,14 @@ export function DashboardNav() {
 
     const items = [
         {
-            title: "Leads",
-            href: "/dashboard/leads",
-            icon: Target,
+            title: "Fetch Data",
+            href: "/dashboard/how-it-works",
+            icon: HelpCircle,
         },
         {
-            title: "Outreach",
-            href: "/dashboard/outreach",
-            icon: Mail,
-        },
-        {
-            title: "Follow-ups",
-            href: "/dashboard/follow-ups",
-            icon: CornerUpLeft, // Using CornerUpLeft for the back/return arrow style
-        },
-        {
-            title: "Responses",
-            href: "/dashboard/responses",
-            icon: MessageSquare,
-        },
-        {
-            title: "Bookings",
-            href: "/dashboard/bookings",
-            icon: Calendar,
-        },
-        {
-            title: "Companies",
-            href: "/dashboard/companies",
-            icon: Building2,
+            title: "Contact Lists",
+            href: "/dashboard/contact-lists",
+            icon: List,
         },
         {
             title: "Contacts",
@@ -47,19 +27,14 @@ export function DashboardNav() {
             icon: Users,
         },
         {
-            title: "Calls",
-            href: "/dashboard/calls",
-            icon: Phone,
-        },
-        {
             title: "Call Logs",
             href: "/dashboard/call-logs",
             icon: PhoneCall,
         },
         {
-            title: "Pipeline",
-            href: "/dashboard/pipeline",
-            icon: TrendingUp,
+            title: "Generated Leads",
+            href: "/dashboard/generated-leads",
+            icon: FileText,
         },
     ]
 
