@@ -2,6 +2,260 @@
 
 import { createClient } from "@/utils/supabase/server"
 
+// Run/Schedule a list - creates scheduled_calls entries for all contacts
+export async function runCallList(listId: string, scheduledAt?: Date) {
+    const supabase = await createClient();
+    
+    try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: "User not authenticated" };
+        }
+
+        // Get contact list and count contacts
+        const { data: listData, error: listError } = await supabase
+            .from('contact_lists')
+            .select('*, contacts(count)')
+            .eq('id', listId)
+            .single();
+
+        if (listError) throw listError;
+        if (!listData) {
+            return { success: false, error: "Contact list not found" };
+        }
+
+        // Get all contacts from the list
+        const { data: contacts, error: contactsError } = await supabase
+            .from('contacts')
+            .select('id')
+            .eq('contact_list_id', listId);
+
+        if (contactsError) throw contactsError;
+
+        if (!contacts || contacts.length === 0) {
+            return { success: false, error: "No contacts found in this list" };
+        }
+
+        // Schedule the call list - create a scheduled call entry for each contact
+        const scheduleTime = scheduledAt || new Date();
+        
+        const scheduledCallsToInsert = contacts.map(contact => ({
+            owner_user_id: user.id,
+            contact_id: contact.id,
+            list_id: listId,
+            scheduled_at: scheduleTime.toISOString(),
+            status: 'scheduled',
+        }));
+
+        // Insert all scheduled calls
+        const { data: scheduledCalls, error: scheduleError } = await supabase
+            .from('scheduled_calls')
+            .insert(scheduledCallsToInsert)
+            .select();
+
+        if (scheduleError) {
+            console.error("Error inserting scheduled calls:", scheduleError);
+            throw scheduleError;
+        }
+
+        console.log(`Created ${scheduledCalls?.length || 0} scheduled calls for list ${listId}`);
+
+        // Update the contact list status to 'scheduled'
+        const { error: updateListError } = await supabase
+            .from('contact_lists')
+            .update({ status: 'scheduled' })
+            .eq('id', listId);
+
+        if (updateListError) {
+            console.error("Error updating list status:", updateListError);
+            // Don't fail the whole operation if status update fails
+        }
+
+        return {
+            success: true,
+            scheduledCalls: scheduledCalls || [],
+            contactsCount: contacts.length
+        };
+    } catch (error: any) {
+        console.error("Error scheduling call list:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Start a list - updates all scheduled calls from 'scheduled' or 'paused' to 'ongoing'
+export async function startCallList(listId: string) {
+    const supabase = await createClient();
+    
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: "User not authenticated" };
+        }
+
+        // First, check how many calls exist for this list
+        const { count: totalCalls, error: countError } = await supabase
+            .from('scheduled_calls')
+            .select('*', { count: 'exact', head: true })
+            .eq('list_id', listId);
+
+        if (countError) {
+            console.error("Error counting scheduled calls:", countError);
+        }
+
+        console.log(`Total scheduled calls for list ${listId}: ${totalCalls || 0}`);
+
+        // Check how many are in scheduled or paused status
+        const { count: eligibleCalls } = await supabase
+            .from('scheduled_calls')
+            .select('*', { count: 'exact', head: true })
+            .eq('list_id', listId)
+            .in('status', ['scheduled', 'paused']);
+
+        console.log(`Eligible calls (scheduled or paused) for list ${listId}: ${eligibleCalls || 0}`);
+
+        // Update all scheduled calls for this list from 'scheduled' or 'paused' to 'in_progress'
+        const { data, error } = await supabase
+            .from('scheduled_calls')
+            .update({ 
+                status: 'in_progress',
+                updated_at: new Date().toISOString()
+            })
+            .eq('list_id', listId)
+            .in('status', ['scheduled', 'paused'])
+            .select();
+
+        if (error) {
+            console.error("Error updating scheduled calls:", error);
+            throw error;
+        }
+
+        console.log(`Updated ${data?.length || 0} calls to in_progress status`);
+
+        // Update the contact list status to 'in_progress' (we'll use 'ongoing' for the list status to match UI)
+        const { error: updateListError } = await supabase
+            .from('contact_lists')
+            .update({ status: 'ongoing' })
+            .eq('id', listId);
+
+        if (updateListError) {
+            console.error("Error updating list status:", updateListError);
+        }
+
+        return {
+            success: true,
+            updatedCount: data?.length || 0
+        };
+    } catch (error: any) {
+        console.error("Error starting call list:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Stop a list - updates all scheduled calls from 'ongoing' to 'paused'
+export async function stopCallList(listId: string) {
+    const supabase = await createClient();
+    
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: "User not authenticated" };
+        }
+
+        // First, check how many calls are in 'in_progress' status
+        const { count: inProgressCount, error: countError } = await supabase
+            .from('scheduled_calls')
+            .select('*', { count: 'exact', head: true })
+            .eq('list_id', listId)
+            .eq('status', 'in_progress');
+
+        if (countError) {
+            console.error("Error counting in_progress calls:", countError);
+        }
+
+        console.log(`In progress calls for list ${listId}: ${inProgressCount || 0}`);
+
+        // Update all scheduled calls for this list from 'in_progress' to 'paused'
+        const { data, error } = await supabase
+            .from('scheduled_calls')
+            .update({ 
+                status: 'paused',
+                updated_at: new Date().toISOString()
+            })
+            .eq('list_id', listId)
+            .eq('status', 'in_progress')
+            .select();
+
+        if (error) {
+            console.error("Error updating scheduled calls:", error);
+            throw error;
+        }
+
+        console.log(`Updated ${data?.length || 0} calls to paused status`);
+
+        // Update the contact list status to 'paused'
+        const { error: updateListError } = await supabase
+            .from('contact_lists')
+            .update({ status: 'paused' })
+            .eq('id', listId);
+
+        if (updateListError) {
+            console.error("Error updating list status:", updateListError);
+        }
+
+        return {
+            success: true,
+            updatedCount: data?.length || 0
+        };
+    } catch (error: any) {
+        console.error("Error stopping call list:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Cancel/Complete a list - updates all scheduled calls to 'completed'
+export async function cancelCallList(listId: string) {
+    const supabase = await createClient();
+    
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: "User not authenticated" };
+        }
+
+        // Update all scheduled calls for this list to 'completed'
+        const { data, error } = await supabase
+            .from('scheduled_calls')
+            .update({ 
+                status: 'completed',
+                updated_at: new Date().toISOString()
+            })
+            .eq('list_id', listId)
+            .in('status', ['scheduled', 'in_progress', 'paused'])
+            .select();
+
+        if (error) throw error;
+
+        // Update the contact list status to 'completed'
+        const { error: updateListError } = await supabase
+            .from('contact_lists')
+            .update({ status: 'completed' })
+            .eq('id', listId);
+
+        if (updateListError) {
+            console.error("Error updating list status:", updateListError);
+        }
+
+        return {
+            success: true,
+            updatedCount: data?.length || 0
+        };
+    } catch (error: any) {
+        console.error("Error cancelling call list:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function startCallingContacts(contactListId?: string) {
     const webhookUrl = process.env.CALL_WEBHOOK_BASE_URL;
 

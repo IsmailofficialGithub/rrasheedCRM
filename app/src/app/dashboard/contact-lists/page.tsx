@@ -1,17 +1,17 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Upload, Download, Loader2, Users, FileText, AlertCircle, CheckCircle2, X, PhoneCall } from "lucide-react"
+import { Upload, Download, Loader2, Users, FileText, AlertCircle, CheckCircle2, X, PhoneCall, ChevronDown, ChevronRight, Calendar, Play, Square, Pause, List } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useDropzone } from "react-dropzone"
 import Papa from "papaparse"
 import * as XLSX from "xlsx"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "sonner"
-import { startCallingContacts } from "./actions"
+import { startCallingContacts, runCallList, startCallList, stopCallList, cancelCallList } from "./actions"
 import { format } from "date-fns"
 import {
     Table,
@@ -44,38 +44,89 @@ export default function ContactListsPage() {
     const [isLoading, setIsLoading] = useState(true)
     const [isUploading, setIsUploading] = useState(false)
     const [isCalling, setIsCalling] = useState(false)
+    const [schedulingListId, setSchedulingListId] = useState<string | null>(null)
+    const [listStatuses, setListStatuses] = useState<Map<string, string>>(new Map()) // Track list statuses
+    const [activeTab, setActiveTab] = useState<'all' | 'scheduled' | 'in_progress' | 'paused' | 'completed'>('all')
+    const [allLists, setAllLists] = useState<ContactList[]>([]) // Store all lists
     const [parsedContacts, setParsedContacts] = useState<ContactRow[]>([])
     const [selectedContacts, setSelectedContacts] = useState<Set<number>>(new Set())
     const [listName, setListName] = useState("")
     const [selectedListId, setSelectedListId] = useState<string | null>(null)
+    const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set())
+    const [listContacts, setListContacts] = useState<Map<string, any[]>>(new Map())
+    const [loadingContacts, setLoadingContacts] = useState<Set<string>>(new Set())
     const selectAllCheckboxRef = useRef<HTMLButtonElement>(null)
 
     const supabase = createClient()
 
-    const fetchContactLists = useCallback(async () => {
+    const fetchContactLists = useCallback(async (tab?: 'all' | 'scheduled' | 'in_progress' | 'paused' | 'completed') => {
+        const currentTab = tab || activeTab
         setIsLoading(true)
         try {
-            const { data, error } = await supabase
+            // Fetch all contact lists
+            const { data: allLists, error: listsError } = await supabase
                 .from('contact_lists')
                 .select('*')
                 .order('created_at', { ascending: false })
 
-            if (error) throw error
+            if (listsError) throw listsError
 
-            if (data) {
-                setContactLists(data as ContactList[])
+            // Use the status from contact_lists table directly
+            // No need to check scheduled_calls - the list status is stored in contact_lists.status
+            const statusMap = new Map<string, string>()
+            
+            if (allLists) {
+                allLists.forEach(list => {
+                    // Use the status from the list itself
+                    if (list.status && list.status !== 'active') {
+                        statusMap.set(list.id, list.status)
+                    }
+                })
             }
+
+            setListStatuses(statusMap)
+            setAllLists(allLists as ContactList[])
+
+            // Filter lists based on active tab
+            let filteredLists: ContactList[] = []
+            
+            if (currentTab === 'all') {
+                // Show all lists
+                filteredLists = allLists as ContactList[]
+            } else if (currentTab === 'scheduled') {
+                // Show only lists with scheduled status
+                filteredLists = (allLists || []).filter(
+                    list => list.status === 'scheduled'
+                )
+            } else if (currentTab === 'in_progress') {
+                // Show only lists with ongoing status (contact_lists uses 'ongoing' but scheduled_calls uses 'in_progress')
+                filteredLists = (allLists || []).filter(
+                    list => list.status === 'ongoing'
+                )
+            } else if (currentTab === 'paused') {
+                // Show only lists with paused status
+                filteredLists = (allLists || []).filter(
+                    list => list.status === 'paused'
+                )
+            } else if (currentTab === 'completed') {
+                // Show only lists with completed status
+                filteredLists = (allLists || []).filter(
+                    list => list.status === 'completed'
+                )
+            }
+
+            setContactLists(filteredLists as ContactList[])
         } catch (err: any) {
             console.error("Error fetching contact lists:", err)
             toast.error("Failed to fetch contact lists")
         } finally {
             setIsLoading(false)
         }
-    }, [supabase])
+    }, [supabase, activeTab])
 
     useEffect(() => {
-        fetchContactLists()
-    }, [fetchContactLists])
+        fetchContactLists(activeTab)
+    }, [fetchContactLists, activeTab])
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const selectedFile = acceptedFiles[0]
@@ -218,14 +269,17 @@ export default function ContactListsPage() {
             // Get selected contacts
             const selectedContactsArray = Array.from(selectedContacts).map(index => parsedContacts[index])
 
-            // Create contact list record
+            // Create contact list record with timestamp in name
+            const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss')
+            const listNameWithTimestamp = `${listName.trim()} [${timestamp}]`
+            
             const { data: listData, error: listError } = await supabase
                 .from('contact_lists')
                 .insert({
-                    name: listName.trim(),
+                    name: listNameWithTimestamp,
                     file_name: file.name,
                     total_contacts: selectedContactsArray.length,
-                    status: 'active'
+                    status: 'scheduled'
                 })
                 .select()
                 .single()
@@ -239,16 +293,39 @@ export default function ContactListsPage() {
                 throw listError
             }
 
-            // Insert contacts
-            const contactsToInsert = selectedContactsArray.map(contact => ({
-                contact_list_id: listData.id,
-                name: contact.name,
-                phone: contact.phone,
-                email: contact.email || null,
-                additional_data: Object.keys(contact)
-                    .filter(k => !['name', 'phone', 'email'].includes(k))
-                    .reduce((acc, k) => ({ ...acc, [k]: contact[k] }), {})
-            }))
+            // Check for duplicate phone numbers in the database
+            const phoneNumbers = selectedContactsArray.map(c => c.phone)
+            const { data: existingContacts } = await supabase
+                .from('contacts')
+                .select('phone')
+                .in('phone', phoneNumbers)
+
+            const existingPhones = new Set(existingContacts?.map(c => c.phone) || [])
+            
+            // Filter out duplicates
+            const contactsToInsert = selectedContactsArray
+                .filter(contact => !existingPhones.has(contact.phone))
+                .map(contact => ({
+                    contact_list_id: listData.id,
+                    name: contact.name,
+                    phone: contact.phone,
+                    email: contact.email || null,
+                    additional_data: Object.keys(contact)
+                        .filter(k => !['name', 'phone', 'email'].includes(k))
+                        .reduce((acc, k) => ({ ...acc, [k]: contact[k] }), {})
+                }))
+
+            const duplicateCount = selectedContactsArray.length - contactsToInsert.length
+            
+            if (duplicateCount > 0) {
+                toast.warning(`${duplicateCount} duplicate phone number${duplicateCount !== 1 ? 's' : ''} skipped`)
+            }
+
+            if (contactsToInsert.length === 0) {
+                toast.error("All contacts have duplicate phone numbers. No contacts to upload.")
+                setIsUploading(false)
+                return
+            }
 
             // Insert in batches to avoid payload size limits
             const batchSize = 100
@@ -282,7 +359,42 @@ export default function ContactListsPage() {
                     .eq('id', listData.id)
             }
 
-            toast.success(`Successfully uploaded ${uploadedCount} contact${uploadedCount !== 1 ? 's' : ''}`)
+            // Get current user to create scheduled_calls
+            const { data: { user } } = await supabase.auth.getUser()
+            
+            if (user && uploadedCount > 0) {
+                // Get the uploaded contact IDs
+                const { data: uploadedContacts, error: fetchContactsError } = await supabase
+                    .from('contacts')
+                    .select('id')
+                    .eq('contact_list_id', listData.id)
+
+                if (!fetchContactsError && uploadedContacts && uploadedContacts.length > 0) {
+                    // Create scheduled_calls entries for all uploaded contacts
+                    const scheduleTime = new Date()
+                    const scheduledCallsToInsert = uploadedContacts.map(contact => ({
+                        owner_user_id: user.id,
+                        contact_id: contact.id,
+                        list_id: listData.id,
+                        scheduled_at: scheduleTime.toISOString(),
+                        status: 'scheduled',
+                    }))
+
+                    const { error: scheduleError } = await supabase
+                        .from('scheduled_calls')
+                        .insert(scheduledCallsToInsert)
+
+                    if (scheduleError) {
+                        console.error("Error creating scheduled calls:", scheduleError)
+                        // Don't fail the upload if scheduled calls creation fails
+                    }
+                }
+            }
+
+            const message = duplicateCount > 0 
+                ? `Successfully uploaded ${uploadedCount} contact${uploadedCount !== 1 ? 's' : ''} (${duplicateCount} duplicate${duplicateCount !== 1 ? 's' : ''} skipped). List is now scheduled.`
+                : `Successfully uploaded ${uploadedCount} contact${uploadedCount !== 1 ? 's' : ''}. List is now scheduled.`
+            toast.success(message)
             setFile(null)
             setParsedContacts([])
             setSelectedContacts(new Set())
@@ -293,6 +405,104 @@ export default function ContactListsPage() {
             toast.error(err.message || "Failed to upload contacts")
         } finally {
             setIsUploading(false)
+        }
+    }
+
+    const handleRunList = async (listId: string) => {
+        setSchedulingListId(listId)
+        try {
+            const result = await runCallList(listId)
+            
+            if (result.success) {
+                toast.success(
+                    `List scheduled successfully`,
+                    {
+                        description: `${result.contactsCount} contacts scheduled for calling`
+                    }
+                )
+                // Refresh contact lists - this list will now be hidden
+                fetchContactLists()
+            } else {
+                toast.error(result.error || "Failed to run list")
+            }
+        } catch (error: any) {
+            console.error("Error running list:", error)
+            toast.error("Error running list: " + error.message)
+        } finally {
+            setSchedulingListId(null)
+        }
+    }
+
+    const handleStartList = async (listId: string) => {
+        setSchedulingListId(listId)
+        try {
+            const result = await startCallList(listId)
+            
+            if (result.success) {
+                toast.success(
+                    `List started`,
+                    {
+                        description: `${result.updatedCount} calls are now in progress`
+                    }
+                )
+                fetchContactLists()
+            } else {
+                toast.error(result.error || "Failed to start list")
+            }
+        } catch (error: any) {
+            console.error("Error starting list:", error)
+            toast.error("Error starting list: " + error.message)
+        } finally {
+            setSchedulingListId(null)
+        }
+    }
+
+    const handleStopList = async (listId: string) => {
+        setSchedulingListId(listId)
+        try {
+            const result = await stopCallList(listId)
+            
+            if (result.success) {
+                toast.success(
+                    `List stopped`,
+                    {
+                        description: `${result.updatedCount} calls paused`
+                    }
+                )
+                fetchContactLists()
+            } else {
+                toast.error(result.error || "Failed to stop list")
+            }
+        } catch (error: any) {
+            console.error("Error stopping list:", error)
+            toast.error("Error stopping list: " + error.message)
+        } finally {
+            setSchedulingListId(null)
+        }
+    }
+
+    const handleCancelList = async (listId: string) => {
+        setSchedulingListId(listId)
+        try {
+            const result = await cancelCallList(listId)
+            
+            if (result.success) {
+                toast.success(
+                    `List completed`,
+                    {
+                        description: `${result.updatedCount} calls marked as completed`
+                    }
+                )
+                // Refresh - completed lists should appear again
+                fetchContactLists()
+            } else {
+                toast.error(result.error || "Failed to cancel list")
+            }
+        } catch (error: any) {
+            console.error("Error cancelling list:", error)
+            toast.error("Error cancelling list: " + error.message)
+        } finally {
+            setSchedulingListId(null)
         }
     }
 
@@ -318,6 +528,46 @@ export default function ContactListsPage() {
             toast.error("Error starting calls: " + error.message)
         } finally {
             setIsCalling(false)
+        }
+    }
+
+    const toggleExpandList = async (listId: string) => {
+        if (expandedLists.has(listId)) {
+            // Collapse
+            setExpandedLists(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(listId)
+                return newSet
+            })
+        } else {
+            // Expand - fetch contacts
+            setExpandedLists(prev => new Set(prev).add(listId))
+            setLoadingContacts(prev => new Set(prev).add(listId))
+            
+            try {
+                const { data, error } = await supabase
+                    .from('contacts')
+                    .select('*')
+                    .eq('contact_list_id', listId)
+                    .order('created_at', { ascending: true })
+
+                if (error) throw error
+
+                setListContacts(prev => {
+                    const newMap = new Map(prev)
+                    newMap.set(listId, data || [])
+                    return newMap
+                })
+            } catch (err: any) {
+                console.error("Error fetching contacts:", err)
+                toast.error("Failed to load contacts")
+            } finally {
+                setLoadingContacts(prev => {
+                    const newSet = new Set(prev)
+                    newSet.delete(listId)
+                    return newSet
+                })
+            }
         }
     }
 
@@ -528,28 +778,77 @@ export default function ContactListsPage() {
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold">Your Contact Lists</h2>
                     <div className="flex items-center gap-2">
-                        {contactLists.length > 0 && (
-                            <Button
-                                onClick={() => handleStartCalling()}
-                                disabled={isCalling}
-                                variant="default"
-                                className="bg-primary hover:bg-primary/90"
-                            >
-                                {isCalling ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Starting Calls...
-                                    </>
-                                ) : (
-                                    <>
-                                        <PhoneCall className="mr-2 h-4 w-4" />
-                                        Start Calling All
-                                    </>
-                                )}
-                            </Button>
-                        )}
                         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                     </div>
+                </div>
+
+                {/* Tabs for filtering lists */}
+                <div className="flex items-center gap-2 mb-4 border-b">
+                    <button
+                        onClick={() => setActiveTab('all')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                            activeTab === 'all'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <List className="h-4 w-4" />
+                            All Lists
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('scheduled')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                            activeTab === 'scheduled'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            Scheduled
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('in_progress')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                            activeTab === 'in_progress'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Play className="h-4 w-4" />
+                            In Progress
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('paused')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                            activeTab === 'paused'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Pause className="h-4 w-4" />
+                            Paused
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('completed')}
+                        className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                            activeTab === 'completed'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Completed
+                        </div>
+                    </button>
                 </div>
 
                 {isLoading ? (
@@ -573,57 +872,239 @@ export default function ContactListsPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead className="w-[50px]"></TableHead>
                                         <TableHead>List Name</TableHead>
                                         <TableHead>File Name</TableHead>
                                         <TableHead>Total Contacts</TableHead>
                                         <TableHead>Created</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        <TableHead className="text-right">Action</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {contactLists.map((list) => (
-                                        <TableRow key={list.id}>
-                                            <TableCell className="font-medium">{list.name}</TableCell>
-                                            <TableCell className="text-muted-foreground">{list.file_name}</TableCell>
-                                            <TableCell>{list.total_contacts}</TableCell>
-                                            <TableCell className="text-muted-foreground">
-                                                {format(new Date(list.created_at), 'MMM dd, yyyy')}
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                                                    list.status === 'active' 
-                                                        ? 'bg-emerald-500/10 text-emerald-500' 
-                                                        : 'bg-muted text-muted-foreground'
-                                                }`}>
-                                                    {list.status === 'active' && <CheckCircle2 className="h-3 w-3" />}
-                                                    {list.status}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleStartCalling(list.id)}
-                                                        disabled={isCalling}
-                                                    >
-                                                        {isCalling ? (
-                                                            <Loader2 className="h-3 w-3 animate-spin" />
-                                                        ) : (
-                                                            <>
-                                                                <PhoneCall className="mr-1 h-3 w-3" />
-                                                                Call
-                                                            </>
-                                                        )}
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm">
-                                                        View
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
+                                    {contactLists.map((list) => {
+                                        const isExpanded = expandedLists.has(list.id)
+                                        const contacts = listContacts.get(list.id) || []
+                                        const isLoadingContacts = loadingContacts.has(list.id)
+                                        
+                                        return (
+                                            <React.Fragment key={list.id}>
+                                                <TableRow className="cursor-pointer hover:bg-muted/30" onClick={() => toggleExpandList(list.id)}>
+                                                    <TableCell>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                toggleExpandList(list.id)
+                                                            }}
+                                                        >
+                                                            {isExpanded ? (
+                                                                <ChevronDown className="h-4 w-4" />
+                                                            ) : (
+                                                                <ChevronRight className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">{list.name}</TableCell>
+                                                    <TableCell className="text-muted-foreground">{list.file_name}</TableCell>
+                                                    <TableCell>{list.total_contacts}</TableCell>
+                                                    <TableCell className="text-muted-foreground">
+                                                        {format(new Date(list.created_at), 'MMM dd, yyyy')}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                                                            list.status === 'active' 
+                                                                ? 'bg-emerald-500/10 text-emerald-500' 
+                                                                : 'bg-muted text-muted-foreground'
+                                                        }`}>
+                                                            {list.status === 'active' && <CheckCircle2 className="h-3 w-3" />}
+                                                            {list.status}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell onClick={(e) => e.stopPropagation()}>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            {(() => {
+                                                                const listStatus = listStatuses.get(list.id)
+                                                                const isProcessing = schedulingListId === list.id
+                                                                
+                                                                if (!listStatus) {
+                                                                    // List not scheduled yet - show Run button
+                                                                    return (
+                                                                        <Button
+                                                                            variant="default"
+                                                                            size="sm"
+                                                                            onClick={() => handleRunList(list.id)}
+                                                                            disabled={isProcessing}
+                                                                            className="bg-primary hover:bg-primary/90"
+                                                                        >
+                                                                            {isProcessing ? (
+                                                                                <>
+                                                                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                                    Running...
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <Play className="mr-1 h-3 w-3" />
+                                                                                    Run List
+                                                                                </>
+                                                                            )}
+                                                                        </Button>
+                                                                    )
+                                                                } else if (listStatus === 'scheduled') {
+                                                                    // List is scheduled - show Start button
+                                                                    return (
+                                                                        <Button
+                                                                            variant="default"
+                                                                            size="sm"
+                                                                            onClick={() => handleStartList(list.id)}
+                                                                            disabled={isProcessing}
+                                                                            className="bg-green-600 hover:bg-green-700"
+                                                                        >
+                                                                            {isProcessing ? (
+                                                                                <>
+                                                                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                                    Starting...
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <Play className="mr-1 h-3 w-3" />
+                                                                                    Start
+                                                                                </>
+                                                                            )}
+                                                                        </Button>
+                                                                    )
+                                                                } else if (listStatus === 'ongoing') {
+                                                                    // List is in progress (contact_lists uses 'ongoing' but scheduled_calls uses 'in_progress') - show Stop and Cancel buttons
+                                                                    return (
+                                                                        <>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => handleStopList(list.id)}
+                                                                                disabled={isProcessing}
+                                                                            >
+                                                                                {isProcessing ? (
+                                                                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <Pause className="mr-1 h-3 w-3" />
+                                                                                        Stop
+                                                                                    </>
+                                                                                )}
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="destructive"
+                                                                                size="sm"
+                                                                                onClick={() => handleCancelList(list.id)}
+                                                                                disabled={isProcessing}
+                                                                            >
+                                                                                {isProcessing ? (
+                                                                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <Square className="mr-1 h-3 w-3" />
+                                                                                        Cancel
+                                                                                    </>
+                                                                                )}
+                                                                            </Button>
+                                                                        </>
+                                                                    )
+                                                                } else if (listStatus === 'paused') {
+                                                                    // List is paused - show Start and Cancel buttons
+                                                                    return (
+                                                                        <>
+                                                                            <Button
+                                                                                variant="default"
+                                                                                size="sm"
+                                                                                onClick={() => handleStartList(list.id)}
+                                                                                disabled={isProcessing}
+                                                                                className="bg-green-600 hover:bg-green-700"
+                                                                            >
+                                                                                {isProcessing ? (
+                                                                                    <>
+                                                                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                                        Starting...
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <Play className="mr-1 h-3 w-3" />
+                                                                                        Resume
+                                                                                    </>
+                                                                                )}
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="destructive"
+                                                                                size="sm"
+                                                                                onClick={() => handleCancelList(list.id)}
+                                                                                disabled={isProcessing}
+                                                                            >
+                                                                                {isProcessing ? (
+                                                                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <Square className="mr-1 h-3 w-3" />
+                                                                                        Cancel
+                                                                                    </>
+                                                                                )}
+                                                                            </Button>
+                                                                        </>
+                                                                    )
+                                                                }
+                                                                return null
+                                                            })()}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                                {isExpanded && (
+                                                    <TableRow>
+                                                        <TableCell colSpan={7} className="p-0 bg-muted/20">
+                                                            <div className="p-4">
+                                                                {isLoadingContacts ? (
+                                                                    <div className="flex items-center justify-center py-4">
+                                                                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                                                    </div>
+                                                                ) : contacts.length === 0 ? (
+                                                                    <div className="text-center py-4 text-muted-foreground text-sm">
+                                                                        No contacts found in this list.
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="space-y-2">
+                                                                        <div className="text-sm font-semibold mb-3">
+                                                                            Contacts ({contacts.length})
+                                                                        </div>
+                                                                        <div className="max-h-[400px] overflow-auto rounded-md border bg-background">
+                                                                            <Table>
+                                                                                <TableHeader>
+                                                                                    <TableRow>
+                                                                                        <TableHead className="w-[50px]">#</TableHead>
+                                                                                        <TableHead>Name</TableHead>
+                                                                                        <TableHead>Phone</TableHead>
+                                                                                        <TableHead>Email</TableHead>
+                                                                                    </TableRow>
+                                                                                </TableHeader>
+                                                                                <TableBody>
+                                                                                    {contacts.map((contact, idx) => (
+                                                                                        <TableRow key={contact.id}>
+                                                                                            <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
+                                                                                            <TableCell className="font-medium">{contact.name}</TableCell>
+                                                                                            <TableCell>{contact.phone}</TableCell>
+                                                                                            <TableCell className="text-muted-foreground">{contact.email || "—"}</TableCell>
+                                                                                        </TableRow>
+                                                                                    ))}
+                                                                                </TableBody>
+                                                                            </Table>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </React.Fragment>
+                                        )
+                                    })}
                                 </TableBody>
                             </Table>
                         </CardContent>

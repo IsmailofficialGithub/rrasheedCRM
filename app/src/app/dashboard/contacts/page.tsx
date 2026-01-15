@@ -158,82 +158,8 @@ export default function ContactsPage() {
         }
     }
 
-    const handleStartCallingAll = async () => {
-        setIsStartingAll(true)
-        try {
-            const result = await startCallingAllContacts()
-            
-            if (result.success) {
-                toast.success(
-                    `Started calling: ${result.successCount} initiated, ${result.failedCount} failed`,
-                    {
-                        description: `Total contacts: ${result.total}`
-                    }
-                )
-                // Refresh contacts to get updated call statuses
-                const fetchContacts = async () => {
-                    const { data } = await supabase
-                        .from('leads')
-                        .select('*')
-                        .not('decision_maker_name', 'is', null)
-                        .neq('decision_maker_name', '')
-                        .neq('decision_maker_name', '-')
-
-                    if (data) {
-                        const leadIds = data.map(l => l.id)
-                        const { data: callLogs } = await supabase
-                            .from('calls_log')
-                            .select('uuid, lead_id, call_status')
-                            .in('lead_id', leadIds)
-                            .order('created_at', { ascending: false })
-
-                        const callLogMap = new Map<string, { uuid: string; status: string }>()
-                        if (callLogs) {
-                            callLogs.forEach(log => {
-                                if (!callLogMap.has(log.lead_id)) {
-                                    callLogMap.set(log.lead_id, { uuid: log.uuid, status: log.call_status || 'initiated' })
-                                }
-                            })
-                        }
-
-                        const formattedContacts = data.map((lead, index) => {
-                            let name = lead.decision_maker_name || "Unknown"
-                            let title = "—"
-                            if (name.includes(',')) {
-                                const parts = name.split(',')
-                                name = parts[0].trim()
-                                title = parts.slice(1).join(',').trim()
-                            }
-                            const callLog = callLogMap.get(lead.id)
-                            return {
-                                id: index + 1,
-                                name: name,
-                                subtitle: "Lead",
-                                title: title,
-                                email: lead.email || "—",
-                                phone: lead.phone_number || "—",
-                                company: lead.company_name || "—",
-                                status: "Lead",
-                                leadId: lead.id,
-                                leadData: lead,
-                                callLogId: callLog?.uuid,
-                                callStatus: callLog?.status || null
-                            }
-                        })
-                        setContacts(formattedContacts)
-                    }
-                }
-                fetchContacts()
-            } else {
-                toast.error(result.error || "Failed to start calling")
-            }
-        } catch (error: any) {
-            console.error("Error starting calls:", error)
-            toast.error("Error starting calls: " + error.message)
-        } finally {
-            setIsStartingAll(false)
-        }
-    }
+    // Note: Individual call initiation removed - now using list-based scheduling
+    // Users should schedule lists from the Contact Lists tab instead
 
     const handleCallControl = async (callLogId: string, action: 'pause' | 'resume' | 'end') => {
         if (!callLogId) {
@@ -324,23 +250,6 @@ export default function ContactsPage() {
                     </span>
                 </h1>
                 <div className="flex items-center gap-2">
-                    <Button
-                        onClick={handleStartCallingAll}
-                        disabled={isStartingAll || contacts.length === 0}
-                        className="bg-primary hover:bg-primary/90"
-                    >
-                        {isStartingAll ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Starting...
-                            </>
-                        ) : (
-                            <>
-                                <Zap className="mr-2 h-4 w-4" />
-                                Start Calling All
-                            </>
-                        )}
-                    </Button>
                     <Button className="bg-[#0f172a] hover:bg-[#1e293b]">
                         <Plus className="h-4 w-4 mr-2" />
                         New Contact
@@ -407,88 +316,64 @@ export default function ContactsPage() {
                                         <TableCell className="text-sm text-muted-foreground text-center">{contact.status}</TableCell>
                                         <TableCell className="text-right pr-4">
                                             <div className="flex items-center justify-end gap-2">
-                                                {contact.phone !== "—" && (
-                                                    <>
-                                                        {!contact.callLogId || contact.callStatus === null || contact.callStatus === 'completed' || contact.callStatus === 'failed' ? (
-                                                            <Button 
-                                                                variant="default" 
-                                                                size="sm"
-                                                                onClick={() => handleCall(contact)}
-                                                                disabled={callingId === contact.leadId}
-                                                                className="bg-primary hover:bg-primary/90"
-                                                            >
-                                                                {callingId === contact.leadId ? (
-                                                                    <>
-                                                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                                                        Calling...
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <PhoneCall className="mr-2 h-3 w-3" />
-                                                                        Call
-                                                                    </>
-                                                                )}
-                                                            </Button>
-                                                        ) : (
-                                                            <div className="flex items-center gap-1">
-                                                                {contact.callStatus === 'ongoing' || contact.callStatus === 'initiated' ? (
-                                                                    <>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'pause')}
-                                                                            disabled={updatingStatusId === contact.callLogId}
-                                                                        >
-                                                                            {updatingStatusId === contact.callLogId ? (
-                                                                                <Loader2 className="h-3 w-3 animate-spin" />
-                                                                            ) : (
-                                                                                <Pause className="h-3 w-3" />
-                                                                            )}
-                                                                        </Button>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'end')}
-                                                                            disabled={updatingStatusId === contact.callLogId}
-                                                                        >
-                                                                            {updatingStatusId === contact.callLogId ? (
-                                                                                <Loader2 className="h-3 w-3 animate-spin" />
-                                                                            ) : (
-                                                                                <Square className="h-3 w-3" />
-                                                                            )}
-                                                                        </Button>
-                                                                    </>
-                                                                ) : contact.callStatus === 'paused' ? (
-                                                                    <>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'resume')}
-                                                                            disabled={updatingStatusId === contact.callLogId}
-                                                                        >
-                                                                            {updatingStatusId === contact.callLogId ? (
-                                                                                <Loader2 className="h-3 w-3 animate-spin" />
-                                                                            ) : (
-                                                                                <Play className="h-3 w-3" />
-                                                                            )}
-                                                                        </Button>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'end')}
-                                                                            disabled={updatingStatusId === contact.callLogId}
-                                                                        >
-                                                                            {updatingStatusId === contact.callLogId ? (
-                                                                                <Loader2 className="h-3 w-3 animate-spin" />
-                                                                            ) : (
-                                                                                <Square className="h-3 w-3" />
-                                                                            )}
-                                                                        </Button>
-                                                                    </>
-                                                                ) : null}
-                                                            </div>
-                                                        )}
-                                                    </>
+                                                {contact.phone !== "—" && contact.callLogId && (
+                                                    <div className="flex items-center gap-1">
+                                                        {contact.callStatus === 'ongoing' || contact.callStatus === 'initiated' ? (
+                                                            <>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'pause')}
+                                                                    disabled={updatingStatusId === contact.callLogId}
+                                                                >
+                                                                    {updatingStatusId === contact.callLogId ? (
+                                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                                    ) : (
+                                                                        <Pause className="h-3 w-3" />
+                                                                    )}
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'end')}
+                                                                    disabled={updatingStatusId === contact.callLogId}
+                                                                >
+                                                                    {updatingStatusId === contact.callLogId ? (
+                                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                                    ) : (
+                                                                        <Square className="h-3 w-3" />
+                                                                    )}
+                                                                </Button>
+                                                            </>
+                                                        ) : contact.callStatus === 'paused' ? (
+                                                            <>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'resume')}
+                                                                    disabled={updatingStatusId === contact.callLogId}
+                                                                >
+                                                                    {updatingStatusId === contact.callLogId ? (
+                                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                                    ) : (
+                                                                        <Play className="h-3 w-3" />
+                                                                    )}
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => contact.callLogId && handleCallControl(contact.callLogId, 'end')}
+                                                                    disabled={updatingStatusId === contact.callLogId}
+                                                                >
+                                                                    {updatingStatusId === contact.callLogId ? (
+                                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                                    ) : (
+                                                                        <Square className="h-3 w-3" />
+                                                                    )}
+                                                                </Button>
+                                                            </>
+                                                        ) : null}
+                                                    </div>
                                                 )}
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                                                     <Pencil className="h-4 w-4" />
