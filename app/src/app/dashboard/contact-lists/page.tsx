@@ -55,7 +55,8 @@ export default function ContactListsPage() {
     const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set())
     const [listContacts, setListContacts] = useState<Map<string, any[]>>(new Map())
     const [loadingContacts, setLoadingContacts] = useState<Set<string>>(new Set())
-    const selectAllCheckboxRef = useRef<HTMLButtonElement>(null)
+    // Note: Radix UI Checkbox doesn't support indeterminate state natively
+    // We'll handle the visual state through the checked prop instead
 
     const supabase = createClient()
 
@@ -240,13 +241,7 @@ export default function ContactListsPage() {
 
     const isAllSelected = parsedContacts.length > 0 && selectedContacts.size === parsedContacts.length
     const isIndeterminate = selectedContacts.size > 0 && selectedContacts.size < parsedContacts.length
-
-    // Set indeterminate state on checkbox
-    useEffect(() => {
-        if (selectAllCheckboxRef.current) {
-            selectAllCheckboxRef.current.indeterminate = isIndeterminate
-        }
-    }, [isIndeterminate])
+    // For Radix UI Checkbox, we'll show checked when all selected, unchecked when none, and use a visual indicator for indeterminate
 
     const uploadContacts = async () => {
         if (!file || parsedContacts.length === 0) {
@@ -515,7 +510,7 @@ export default function ContactListsPage() {
                 toast.success(
                     `Started calling: ${result.successCount} initiated, ${result.failedCount} failed`,
                     {
-                        description: result.errors.length > 0 
+                        description: result.errors && result.errors.length > 0
                             ? `Some errors: ${result.errors.join(', ')}`
                             : undefined
                     }
@@ -725,7 +720,6 @@ export default function ContactListsPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Checkbox
-                                    ref={selectAllCheckboxRef}
                                     checked={isAllSelected}
                                     onCheckedChange={toggleSelectAll}
                                 />
@@ -742,7 +736,6 @@ export default function ContactListsPage() {
                                     <TableRow>
                                         <TableHead className="w-[50px]">
                                             <Checkbox
-                                                ref={selectAllCheckboxRef}
                                                 checked={isAllSelected}
                                                 onCheckedChange={toggleSelectAll}
                                             />

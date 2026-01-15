@@ -41,7 +41,7 @@ export default function HowItWorksPage() {
                 setFetchedLeads([])
                 toast.info("API integration pending. This is a placeholder for future API calls.")
             } else {
-                toast.error(result.error || "Failed to fetch leads")
+                toast.error('error' in result ? result.error : "Failed to fetch leads")
             }
         } catch (error: any) {
             toast.error("Error fetching leads: " + error.message)
