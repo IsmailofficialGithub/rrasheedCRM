@@ -31,6 +31,36 @@ export async function updateCallStatus(callLogId: string, status: 'paused' | 're
     }
 }
 
+export async function callContactWebhook(name: string, number: string) {
+    const webhookUrl = process.env.CALL_WEBHOOK_BASE_URL;
+
+    if (!webhookUrl) {
+        return { success: false, error: "CALL_WEBHOOK_BASE_URL is not defined in environment variables" };
+    }
+
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                number: number
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Webhook failed: ${response.status}`);
+        }
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error calling webhook:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function startCallingAllContacts() {
     const webhookUrl = process.env.CALL_WEBHOOK_BASE_URL;
 
