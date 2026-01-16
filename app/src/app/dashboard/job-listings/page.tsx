@@ -52,7 +52,7 @@ export default function JobListingsPage() {
     const [totalCount, setTotalCount] = useState(0)
     const [totalPages, setTotalPages] = useState(0)
     const [availableJobTypes, setAvailableJobTypes] = useState<string[]>([])
-    const itemsPerPage = 20
+    const itemsPerPage = 50
 
     const supabase = createClient()
 
