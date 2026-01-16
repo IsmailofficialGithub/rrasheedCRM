@@ -213,7 +213,7 @@ export default function JobListingsPage() {
             </div>
 
             {/* Search and Filters */}
-            <Card className="border shadow-sm">
+            <Card className="border shadow-sm w-full">
                 <CardContent className="pt-6">
                     <div className="space-y-4">
                         {/* Search Bar */}
@@ -300,7 +300,7 @@ export default function JobListingsPage() {
             </Card>
 
             {/* Job Listings Table */}
-            <Card className="flex-1 flex flex-col overflow-hidden border shadow-md">
+            <Card className="flex-1 flex flex-col overflow-hidden border shadow-md min-h-0 w-full">
                 <CardHeader>
                     <CardTitle>Job Listings</CardTitle>
                     <CardDescription>
@@ -318,7 +318,7 @@ export default function JobListingsPage() {
                         </div>
                     ) : (
                         <>
-                            <div className="flex-1 overflow-y-auto overflow-x-auto">
+                            <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
                                 <Table>
                                     <TableHeader className="sticky top-0 bg-muted/50 z-10 backdrop-blur-sm">
                                         <TableRow className="hover:bg-transparent border-b border-border">
@@ -446,7 +446,7 @@ export default function JobListingsPage() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="border-t p-4">
+                                <div className="border-t">
                                     <CustomPagination
                                         currentPage={page}
                                         totalPages={totalPages}
