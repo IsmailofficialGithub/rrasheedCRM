@@ -11,10 +11,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { User, Phone, Mail, Plus, Pencil, Loader2, PhoneCall, Play, Pause, Square, Zap } from "lucide-react"
+import { User, Phone, Loader2, PhoneCall, Play, Pause, Square } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { triggerCallWebhook } from "../calls/actions"
-import { startCallingAllContacts, updateCallStatus } from "./actions"
+import { startCallingAllContacts, updateCallStatus, callContactWebhook } from "./actions"
 import { toast } from "sonner"
 
 interface Contact {
@@ -117,28 +117,14 @@ export default function ContactsPage() {
     }, [supabase])
 
     const handleCall = async (contact: Contact) => {
-        if (!contact.leadId || !contact.leadData) {
-            toast.error("Contact data is missing")
+        if (!contact.phone || contact.phone === "—") {
+            toast.error("Phone number not available")
             return
         }
 
-        setCallingId(contact.leadId)
+        setCallingId(contact.id.toString())
         try {
-            const result = await triggerCallWebhook({
-                id: contact.leadData.id,
-                name: contact.name,
-                phone: contact.phone,
-                company: contact.company,
-                created_at: contact.leadData.created_at,
-                updated_at: contact.leadData.updated_at,
-                job_posting_url: contact.leadData.job_posting_url,
-                city_state: contact.leadData.city_state,
-                salary_range: contact.leadData.salary_range,
-                decision_maker_name: contact.leadData.decision_maker_name,
-                state: contact.leadData.city_state?.split(',').pop(),
-                email: contact.leadData.email,
-                phone_number: contact.leadData.phone_number,
-            })
+            const result = await callContactWebhook(contact.name, contact.phone)
 
             if (result.success) {
                 toast.success(`Calling ${contact.name}...`, {
@@ -249,12 +235,6 @@ export default function ContactsPage() {
                         ({totalCount})
                     </span>
                 </h1>
-                <div className="flex items-center gap-2">
-                    <Button className="bg-[#0f172a] hover:bg-[#1e293b]">
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Contact
-                    </Button>
-                </div>
             </div>
 
             {/* Table */}
@@ -275,7 +255,6 @@ export default function ContactsPage() {
                                     <TableHead className="w-[50px] font-semibold text-muted-foreground text-xs uppercase tracking-wider text-center">#</TableHead>
                                     <TableHead className="min-w-[200px] font-semibold text-muted-foreground text-xs uppercase tracking-wider">Name</TableHead>
                                     <TableHead className="min-w-[200px] font-semibold text-muted-foreground text-xs uppercase tracking-wider">Job Title</TableHead>
-                                    <TableHead className="min-w-[200px] font-semibold text-muted-foreground text-xs uppercase tracking-wider">Email</TableHead>
                                     <TableHead className="min-w-[150px] font-semibold text-muted-foreground text-xs uppercase tracking-wider">Phone</TableHead>
                                     <TableHead className="min-w-[100px] font-semibold text-muted-foreground text-xs uppercase tracking-wider">Company</TableHead>
                                     <TableHead className="min-w-[100px] font-semibold text-muted-foreground text-xs uppercase tracking-wider">Status</TableHead>
@@ -302,12 +281,6 @@ export default function ContactsPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-                                                <Mail className="h-3 w-3" />
-                                                {contact.email}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
                                                 <Phone className="h-3 w-3" />
                                                 {contact.phone}
                                             </div>
@@ -316,6 +289,27 @@ export default function ContactsPage() {
                                         <TableCell className="text-sm text-muted-foreground text-center">{contact.status}</TableCell>
                                         <TableCell className="text-right pr-4">
                                             <div className="flex items-center justify-end gap-2">
+                                                {contact.phone !== "—" && contact.phone && (
+                                                    <Button
+                                                        variant="default"
+                                                        size="sm"
+                                                        onClick={() => handleCall(contact)}
+                                                        disabled={callingId === contact.id.toString()}
+                                                        className="bg-primary hover:bg-primary/90"
+                                                    >
+                                                        {callingId === contact.id.toString() ? (
+                                                            <>
+                                                                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                                                Calling...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <PhoneCall className="h-3 w-3 mr-2" />
+                                                                Call
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                )}
                                                 {contact.phone !== "—" && contact.callLogId && (
                                                     <div className="flex items-center gap-1">
                                                         {contact.callStatus === 'ongoing' || contact.callStatus === 'initiated' ? (
@@ -375,9 +369,6 @@ export default function ContactsPage() {
                                                         ) : null}
                                                     </div>
                                                 )}
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
