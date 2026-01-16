@@ -56,8 +56,8 @@ export function CustomPagination({
   }
 
   return (
-    <div className={cn("flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4 border-t bg-muted/5", className)}>
-      <div className="flex flex-col gap-1">
+    <div className={cn("flex flex-col sm:flex-row items-center justify-between px-4 py-2 gap-2 border-t bg-muted/5", className)}>
+      <div className="flex flex-col gap-0.5">
         <p className="text-xs text-muted-foreground font-medium">
           Showing <span className="text-foreground">Page {currentPage}</span> of {totalPages || 1}
         </p>
