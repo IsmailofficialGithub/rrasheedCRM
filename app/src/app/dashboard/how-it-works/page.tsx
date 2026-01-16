@@ -36,10 +36,14 @@ export default function HowItWorksPage() {
             const result = await fetchLeadsByNiche(niche.trim())
             
             if (result.success) {
-                // For now, show mock data structure
-                // When API is integrated, use result.data
-                setFetchedLeads([])
-                toast.info("API integration pending. This is a placeholder for future API calls.")
+                // Use the data from the webhook response
+                if (result.data && Array.isArray(result.data)) {
+                    setFetchedLeads(result.data)
+                    toast.success(`Successfully fetched ${result.data.length} leads`)
+                } else {
+                    setFetchedLeads([])
+                    toast.success("Webhook called successfully")
+                }
             } else {
                 toast.error('error' in result ? result.error : "Failed to fetch leads")
             }
@@ -210,10 +214,6 @@ export default function HowItWorksPage() {
                         <h3 className="text-lg font-semibold mb-2">No leads fetched yet</h3>
                         <p className="text-sm text-muted-foreground text-center max-w-md">
                             Enter a niche or keyword above and click "Fetch Leads" to retrieve leads from the API.
-                            <br />
-                            <span className="text-xs mt-2 block text-amber-500">
-                                Note: API integration is pending. This is a placeholder UI.
-                            </span>
                         </p>
                     </CardContent>
                 </Card>

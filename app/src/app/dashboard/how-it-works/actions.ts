@@ -1,29 +1,58 @@
 "use server"
 
 import { createClient } from "@/utils/supabase/server"
+import axios from "axios"
 
 export async function fetchLeadsByNiche(niche: string) {
-    // TODO: Replace with actual API call
-    // For now, this is a placeholder that will be replaced with the real API integration
-    
     try {
-        // Placeholder: In the future, this will call an external API
-        // const response = await fetch(`YOUR_API_URL?niche=${niche}`, {
-        //     method: 'GET',
-        //     headers: { 'Content-Type': 'application/json' }
-        // })
-        // const data = await response.json()
+        const trimmedKeyword = niche.trim()
         
-        // Mock data structure for now
-        const mockData = {
-            success: true,
-            message: "API integration pending - this is a placeholder",
-            data: []
+        if (!trimmedKeyword) {
+            return {
+                success: false,
+                error: "Keyword cannot be empty"
+            }
         }
+
+        const webhookUrl = process.env.FETCH_DATA_WEBHOOK
         
-        return mockData
+        if (!webhookUrl) {
+            console.error("FETCH_DATA_WEBHOOK environment variable is not set")
+            return {
+                success: false,
+                error: "Webhook URL is not configured"
+            }
+        }
+
+        const response = await axios.post(webhookUrl, {
+            keyword: trimmedKeyword
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+
+        const data = response.data
+        
+        return {
+            success: true,
+            data: data
+        }
     } catch (error: any) {
         console.error("Error fetching leads by niche:", error)
+        
+        // Handle axios errors specifically
+        if (axios.isAxiosError(error)) {
+            const status = error.response?.status
+            const statusText = error.response?.statusText
+            const errorMessage = error.response?.data?.message || error.message
+            
+            return {
+                success: false,
+                error: `Webhook request failed: ${status} ${statusText || ''} - ${errorMessage}`
+            }
+        }
+        
         return {
             success: false,
             error: error.message || "Failed to fetch leads"
