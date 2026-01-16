@@ -146,6 +146,19 @@ export default function JobListingsPage() {
         fetchJobListings(page)
     }, [fetchJobListings, page])
 
+    // Auto-refresh every 1 minute to get latest entries
+    useEffect(() => {
+        const interval = setInterval(() => {
+            // Auto-refresh current page to get latest data
+            if (!isLoading) {
+                fetchJobListings(page)
+            }
+        }, 60000) // 60 seconds = 1 minute
+
+        // Cleanup interval on unmount
+        return () => clearInterval(interval)
+    }, [page, isLoading, fetchJobListings])
+
     const handleSearch = () => {
         setPage(1)
         fetchJobListings(1)
