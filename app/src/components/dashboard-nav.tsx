@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { HelpCircle, Users, PhoneCall, FileText, List, Briefcase } from "lucide-react"
+import { HelpCircle, Users, PhoneCall, FileText, List, Briefcase, Settings } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 // import { Button } from "@/components/ui/button"
@@ -40,6 +40,11 @@ export function DashboardNav() {
             title: "Job Listings",
             href: "/dashboard/job-listings",
             icon: Briefcase,
+        },
+        {
+            title: "Settings",
+            href: "/dashboard/settings",
+            icon: Settings,
         },
     ]
 
