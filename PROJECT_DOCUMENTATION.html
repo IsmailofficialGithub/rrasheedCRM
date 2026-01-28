@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24hourplacements CRM - Complete Project Documentation</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm;
+        }
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #333;
+            max-width: 100%;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 24pt;
+            font-weight: bold;
+            margin-top: 24pt;
+            margin-bottom: 12pt;
+            page-break-after: avoid;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 8pt;
+        }
+        h2 {
+            color: #34495e;
+            font-size: 18pt;
+            font-weight: bold;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+            page-break-after: avoid;
+            border-bottom: 2px solid #95a5a6;
+            padding-bottom: 6pt;
+        }
+        h3 {
+            color: #555;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 16pt;
+            margin-bottom: 8pt;
+            page-break-after: avoid;
+        }
+        h4 {
+            color: #666;
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 12pt;
+            margin-bottom: 6pt;
+        }
+        p {
+            margin: 8pt 0;
+            text-align: justify;
+        }
+        ul, ol {
+            margin: 10pt 0;
+            padding-left: 30pt;
+        }
+        li {
+            margin: 6pt 0;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2pt 6pt;
+            border-radius: 3pt;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            color: #c7254e;
+        }
+        pre {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4pt;
+            padding: 12pt;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            page-break-inside: avoid;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12pt 0;
+            page-break-inside: avoid;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 8pt;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #2980b9;
+        }
+        td {
+            padding: 6pt 8pt;
+            border: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .diagram {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6pt;
+            padding: 16pt;
+            margin: 16pt 0;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            white-space: pre;
+            overflow-x: auto;
+            page-break-inside: avoid;
+        }
+        .highlight-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 12pt;
+            margin: 12pt 0;
+            page-break-inside: avoid;
+        }
+        .feature-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12pt;
+            margin: 12pt 0;
+            page-break-inside: avoid;
+        }
+        .toc {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 16pt;
+            margin: 20pt 0;
+            page-break-after: always;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 4pt 0;
+        }
+        .toc a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .header-info {
+            text-align: center;
+            margin-bottom: 30pt;
+            padding-bottom: 20pt;
+            border-bottom: 2px solid #3498db;
+        }
+        .header-info h1 {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+        .version-info {
+            color: #7f8c8d;
+            font-size: 10pt;
+            margin-top: 8pt;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-info">
+    <h1>24hourplacements CRM</h1>
+    <h2>Complete Project Documentation</h2>
+    <div class="version-info">
+        <strong>Version:</strong> 2.0 | <strong>Date:</strong> 2024 | <strong>Project Type:</strong> Customer Relationship Management System
+    </div>
+</div>
+
+<div class="toc">
+    <h2>Table of Contents</h2>
+    <ul>
+        <li><a href="#executive-summary">1. Executive Summary</a></li>
+        <li><a href="#project-overview">2. Project Overview</a></li>
+        <li><a href="#technology-stack">3. Technology Stack</a></li>
+        <li><a href="#system-architecture">4. System Architecture</a></li>
+        <li><a href="#key-features">5. Key Features</a></li>
+        <li><a href="#database-schema">6. Database Schema</a></li>
+        <li><a href="#user-flows">7. User Flows & Workflows</a></li>
+        <li><a href="#best-features">8. Best Features Highlight</a></li>
+        <li><a href="#api-integration">9. API Integration</a></li>
+        <li><a href="#security">10. Security & Authentication</a></li>
+        <li><a href="#deployment">11. Deployment & Configuration</a></li>
+        <li><a href="#implementation-status">12. Current Implementation Status</a></li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<h1 id="executive-summary">1. Executive Summary</h1>
+
+<p><strong>24hourplacements CRM</strong> is a comprehensive, modern Customer Relationship Management system designed for lead generation, contact management, automated calling, and job listing management. Built with Next.js 16 and Supabase, it provides a scalable, real-time solution for businesses to manage their sales pipeline, automate outreach, and track performance metrics.</p>
+
+<div class="highlight-box">
+    <h3>Key Highlights</h3>
+    <ul>
+        <li><strong>Modern Tech Stack:</strong> Next.js 16, React 19, TypeScript, Supabase</li>
+        <li><strong>Real-time Data:</strong> Live updates with Supabase real-time subscriptions</li>
+        <li><strong>Automated Calling:</strong> Integrated call management with status tracking</li>
+        <li><strong>Lead Generation:</strong> Automated lead fetching and management</li>
+        <li><strong>Contact Management:</strong> Bulk import, list management, and scheduling</li>
+        <li><strong>Job Listings:</strong> Comprehensive job posting management</li>
+        <li><strong>Voice & Transcript:</strong> AI-generated voice recordings with transcripts</li>
+    </ul>
+</div>
+
+<h1 id="project-overview">2. Project Overview</h1>
+
+<h2>2.1 Purpose</h2>
+<p>The CRM system is designed to streamline the entire sales and recruitment process, from initial lead generation to final conversion. It automates repetitive tasks, provides comprehensive tracking, and offers actionable insights through an intuitive dashboard.</p>
+
+<h2>2.2 Target Users</h2>
+<ul>
+    <li>Sales teams</li>
+    <li>Recruitment agencies</li>
+    <li>Business development professionals</li>
+    <li>Lead generation specialists</li>
+</ul>
+
+<h2>2.3 Core Value Propositions</h2>
+<ol>
+    <li><strong>Automation:</strong> Reduce manual work with automated lead fetching and calling</li>
+    <li><strong>Centralization:</strong> All contacts, leads, and job listings in one place</li>
+    <li><strong>Tracking:</strong> Complete visibility into call logs, responses, and conversions</li>
+    <li><strong>Scalability:</strong> Handle thousands of contacts and leads efficiently</li>
+    <li><strong>Real-time Updates:</strong> Instant synchronization across all devices</li>
+</ol>
+
+<div class="page-break"></div>
+
+<h1 id="technology-stack">3. Technology Stack</h1>
+
+<h2>3.1 Frontend</h2>
+<table>
+    <tr>
+        <th>Technology</th>
+        <th>Version</th>
+        <th>Purpose</th>
+    </tr>
+    <tr>
+        <td>Next.js</td>
+        <td>16.1.1</td>
+        <td>React framework with App Router</td>
+    </tr>
+    <tr>
+        <td>React</td>
+        <td>19.2.3</td>
+        <td>UI library</td>
+    </tr>
+    <tr>
+        <td>TypeScript</td>
+        <td>5</td>
+        <td>Type-safe programming</td>
+    </tr>
+    <tr>
+        <td>Tailwind CSS</td>
+        <td>4</td>
+        <td>Utility-first CSS framework</td>
+    </tr>
+    <tr>
+        <td>Radix UI</td>
+        <td>Latest</td>
+        <td>Accessible component primitives</td>
+    </tr>
+    <tr>
+        <td>Lucide React</td>
+        <td>0.562.0</td>
+        <td>Icon library</td>
+    </tr>
+    <tr>
+        <td>next-themes</td>
+        <td>0.4.6</td>
+        <td>Dark/light mode support</td>
+    </tr>
+    <tr>
+        <td>Sonner</td>
+        <td>2.0.7</td>
+        <td>Toast notifications</td>
+    </tr>
+    <tr>
+        <td>PapaParse</td>
+        <td>5.5.3</td>
+        <td>CSV parsing</td>
+    </tr>
+    <tr>
+        <td>XLSX</td>
+        <td>0.18.5</td>
+        <td>Excel file handling</td>
+    </tr>
+    <tr>
+        <td>date-fns</td>
+        <td>4.1.0</td>
+        <td>Date manipulation</td>
+    </tr>
+    <tr>
+        <td>Zod</td>
+        <td>4.2.1</td>
+        <td>Schema validation</td>
+    </tr>
+</table>
+
+<h2>3.2 Backend & Database</h2>
+<ul>
+    <li><strong>Database:</strong> Supabase (PostgreSQL)</li>
+    <li><strong>Authentication:</strong> Supabase Auth</li>
+    <li><strong>Real-time:</strong> Supabase Realtime</li>
+    <li><strong>Storage:</strong> Supabase Storage (for voice files)</li>
+    <li><strong>API:</strong> Next.js Server Actions & API Routes</li>
+</ul>
+
+<h2>3.3 Development Tools</h2>
+<ul>
+    <li><strong>Package Manager:</strong> npm</li>
+    <li><strong>Linting:</strong> ESLint</li>
+    <li><strong>Build Tool:</strong> Next.js built-in</li>
+    <li><strong>Version Control:</strong> Git</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h1 id="system-architecture">4. System Architecture</h1>
+
+<h2>4.1 High-Level Architecture</h2>
+<div class="diagram">
+┌─────────────────────────────────────────────────────────────┐
+│                        CLIENT LAYER                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │   Dashboard  │  │  Contacts    │  │  Call Logs   │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │ Contact Lists│  │ Generated    │  │ Job Listings │     │
+│  │              │  │ Leads        │  │              │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    NEXT.JS APPLICATION LAYER                 │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              Server Actions & API Routes              │   │
+│  │  • Authentication Middleware                         │   │
+│  │  • Data Fetching & Mutations                        │   │
+│  │  • Webhook Handlers                                  │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      SUPABASE LAYER                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  PostgreSQL  │  │  Auth        │  │  Storage     │      │
+│  │  Database    │  │  Service     │  │  (Voice)     │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│  ┌──────────────┐  ┌──────────────┐                      │
+│  │  Realtime    │  │  Row Level    │                      │
+│  │  Subscriptions│  │  Security     │                      │
+│  └──────────────┘  └──────────────┘                      │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    EXTERNAL SERVICES                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  Call API     │  │  Lead Gen    │  │  Job Listing │      │
+│  │  (Webhook)   │  │  API         │  │  API         │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+</div>
+
+<h2>4.2 Component Architecture</h2>
+<pre>
+app/
+├── src/
+│   ├── app/
+│   │   ├── dashboard/          # Main dashboard routes
+│   │   │   ├── page.tsx        # Dashboard overview
+│   │   │   ├── contacts/       # Contact management
+│   │   │   ├── contact-lists/  # Bulk contact import
+│   │   │   ├── call-logs/      # Call history
+│   │   │   ├── generated-leads/ # AI-generated leads
+│   │   │   ├── job-listings/   # Job posting management
+│   │   │   └── how-it-works/   # Lead fetching
+│   │   ├── login/              # Authentication
+│   │   └── auth/callback/      # OAuth callback
+│   ├── components/
+│   │   ├── ui/                  # Reusable UI components
+│   │   ├── leads/               # Lead-specific components
+│   │   └── dashboard-nav.tsx   # Navigation
+│   ├── utils/
+│   │   └── supabase/            # Supabase clients
+│   └── middleware.ts            # Auth middleware
+</pre>
+
+<div class="page-break"></div>
+
+<h1 id="key-features">5. Key Features</h1>
+
+<h2>5.1 Dashboard Overview</h2>
+<p><strong>Location:</strong> <code>/dashboard</code></p>
+<p><strong>Features:</strong></p>
+<ul>
+    <li>Real-time statistics (Total Leads, Companies, Calls, Generated Leads)</li>
+    <li>Recent leads display</li>
+    <li>Workflow overview visualization</li>
+    <li>Quick access to all modules</li>
+</ul>
+<p><strong>Metrics Tracked:</strong></p>
+<ul>
+    <li>Total number of leads in system</li>
+    <li>Unique companies count</li>
+    <li>Total outbound calls made</li>
+    <li>Generated leads with voice/transcript</li>
+</ul>
+
+<h2>5.2 Contact Management</h2>
+<p><strong>Location:</strong> <code>/dashboard/contacts</code></p>
+<p><strong>Features:</strong></p>
+<ul>
+    <li>View all contacts with decision maker information</li>
+    <li>Direct calling from contact list</li>
+    <li>Call status tracking (initiated, ongoing, paused, ended)</li>
+    <li>Real-time call control (pause, resume, end)</li>
+    <li>Contact details: Name, Title, Email, Phone, Company</li>
+</ul>
+
+<h2>5.3 Contact Lists Management</h2>
+<p><strong>Location:</strong> <code>/dashboard/contact-lists</code></p>
+<div class="feature-box">
+    <p><strong>Key Capabilities:</strong></p>
+    <ul>
+        <li><strong>Bulk Import:</strong> Upload CSV or Excel files</li>
+        <li><strong>File Parsing:</strong> Automatic detection of name, phone, email columns</li>
+        <li><strong>Contact Selection:</strong> Choose specific contacts before upload</li>
+        <li><strong>List Management:</strong> Create, view, and manage contact lists</li>
+        <li><strong>Status Tracking:</strong> Scheduled, Ongoing, Paused, Completed</li>
+        <li><strong>Batch Operations:</strong> Schedule entire lists for calling</li>
+    </ul>
+</div>
+<p><strong>Supported File Formats:</strong></p>
+<ul>
+    <li>CSV (Comma-separated values)</li>
+    <li>XLSX (Excel 2007+)</li>
+    <li>XLS (Excel 97-2003)</li>
+</ul>
+
+<h2>5.4 Call Logs</h2>
+<p><strong>Location:</strong> <code>/dashboard/call-logs</code></p>
+<p><strong>Features:</strong></p>
+<ul>
+    <li>Complete call history</li>
+    <li>Call duration tracking</li>
+    <li>Call status monitoring</li>
+    <li>Company and phone number association</li>
+    <li>Timestamp tracking</li>
+</ul>
+
+<h2>5.5 Generated Leads</h2>
+<p><strong>Location:</strong> <code>/dashboard/generated-leads</code></p>
+<p><strong>Features:</strong></p>
+<ul>
+    <li>View leads with AI-generated voice recordings</li>
+    <li>Play voice recordings directly in browser</li>
+    <li>Read transcripts of conversations</li>
+    <li>Search by niche or company name</li>
+    <li>Pagination for large datasets</li>
+    <li>Status tracking (Pending, Completed)</li>
+</ul>
+
+<h2>5.6 Job Listings</h2>
+<p><strong>Location:</strong> <code>/dashboard/job-listings</code></p>
+<p><strong>Features:</strong></p>
+<ul>
+    <li>Comprehensive job posting database</li>
+    <li>Advanced search (title, company, description)</li>
+    <li>Filter by job type and publication date</li>
+    <li>Auto-refresh every minute</li>
+    <li>Pagination (50 items per page)</li>
+    <li>Direct links to job postings</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h1 id="database-schema">6. Database Schema</h1>
+
+<h2>6.1 Entity Relationship Diagram</h2>
+<div class="diagram">
+┌─────────────────┐
+│     users       │ (Supabase Auth)
+│  (auth.users)   │
+└────────┬────────┘
+         │
+         │ owner_user_id
+         │
+         ▼
+┌─────────────────────────────────────────────────────────┐
+│              scheduled_calls                             │
+│  • id (uuid, PK)                                        │
+│  • owner_user_id (uuid, FK → auth.users)               │
+│  • contact_id (uuid, FK → contacts)                     │
+│  • list_id (uuid, FK → contact_lists)                  │
+│  • scheduled_at (timestamptz)                            │
+│  • status (text)                                        │
+└─────────────────────────────────────────────────────────┘
+         │
+         │ contact_id
+         │
+         ▼
+┌─────────────────────────────────────────────────────────┐
+│              contacts                                    │
+│  • id (uuid, PK)                                        │
+│  • contact_list_id (uuid, FK → contact_lists)          │
+│  • name (text)                                          │
+│  • phone (text)                                         │
+│  • email (text, nullable)                               │
+└─────────────────────────────────────────────────────────┘
+         │
+         │ contact_list_id
+         │
+         ▼
+┌─────────────────────────────────────────────────────────┐
+│              contact_lists                               │
+│  • id (uuid, PK)                                        │
+│  • name (text)                                          │
+│  • total_contacts (integer)                             │
+│  • status (text)                                        │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│              leads                                       │
+│  • id (uuid, PK)                                        │
+│  • company_name (text)                                  │
+│  • decision_maker_name (text)                           │
+│  • email (text)                                         │
+│  • phone_number (text)                                  │
+└─────────────────────────────────────────────────────────┘
+         │
+         │ lead_id
+         │
+         ▼
+┌─────────────────────────────────────────────────────────┐
+│              generated_leads                             │
+│  • id (uuid, PK)                                        │
+│  • lead_id (uuid, FK → leads)                           │
+│  • niche (text)                                         │
+│  • voice_url (text)                                     │
+│  • transcript (text)                                    │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│              calls_log                                   │
+│  • uuid (uuid, PK)                                      │
+│  • lead_id (uuid, FK → leads)                           │
+│  • company (text)                                       │
+│  • phone (text)                                         │
+│  • duration (integer)                                    │
+│  • call_status (text)                                   │
+└─────────────────────────────────────────────────────────┘
+</div>
+
+<h2>6.2 Core Tables</h2>
+
+<h3>leads</h3>
+<p>Primary table storing all lead information.</p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td>uuid</td>
+        <td>Primary key</td>
+    </tr>
+    <tr>
+        <td>company_name</td>
+        <td>text</td>
+        <td>Company name (required)</td>
+    </tr>
+    <tr>
+        <td>decision_maker_name</td>
+        <td>text</td>
+        <td>Contact person name</td>
+    </tr>
+    <tr>
+        <td>email</td>
+        <td>text</td>
+        <td>Contact email</td>
+    </tr>
+    <tr>
+        <td>phone_number</td>
+        <td>text</td>
+        <td>Contact phone</td>
+    </tr>
+    <tr>
+        <td>created_at</td>
+        <td>timestamptz</td>
+        <td>Creation timestamp</td>
+    </tr>
+    <tr>
+        <td>updated_at</td>
+        <td>timestamptz</td>
+        <td>Last update timestamp</td>
+    </tr>
+</table>
+
+<h3>contact_lists</h3>
+<p>Stores metadata about uploaded contact lists.</p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td>uuid</td>
+        <td>Primary key</td>
+    </tr>
+    <tr>
+        <td>name</td>
+        <td>text</td>
+        <td>List name</td>
+    </tr>
+    <tr>
+        <td>file_name</td>
+        <td>text</td>
+        <td>Original file name</td>
+    </tr>
+    <tr>
+        <td>total_contacts</td>
+        <td>integer</td>
+        <td>Number of contacts</td>
+    </tr>
+    <tr>
+        <td>status</td>
+        <td>text</td>
+        <td>active/scheduled/ongoing/paused/completed</td>
+    </tr>
+</table>
+
+<h3>contacts</h3>
+<p>Individual contacts within a contact list.</p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td>uuid</td>
+        <td>Primary key</td>
+    </tr>
+    <tr>
+        <td>contact_list_id</td>
+        <td>uuid</td>
+        <td>Foreign key to contact_lists</td>
+    </tr>
+    <tr>
+        <td>name</td>
+        <td>text</td>
+        <td>Contact name</td>
+    </tr>
+    <tr>
+        <td>phone</td>
+        <td>text</td>
+        <td>Phone number</td>
+    </tr>
+    <tr>
+        <td>email</td>
+        <td>text</td>
+        <td>Email address (optional)</td>
+    </tr>
+    <tr>
+        <td>additional_data</td>
+        <td>jsonb</td>
+        <td>Flexible JSON data</td>
+    </tr>
+</table>
+
+<h3>scheduled_calls</h3>
+<p>Tracks all scheduled and in-progress calls.</p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td>uuid</td>
+        <td>Primary key</td>
+    </tr>
+    <tr>
+        <td>owner_user_id</td>
+        <td>uuid</td>
+        <td>User who owns the call</td>
+    </tr>
+    <tr>
+        <td>contact_id</td>
+        <td>uuid</td>
+        <td>Contact to call</td>
+    </tr>
+    <tr>
+        <td>list_id</td>
+        <td>uuid</td>
+        <td>Contact list reference</td>
+    </tr>
+    <tr>
+        <td>scheduled_at</td>
+        <td>timestamptz</td>
+        <td>When to call</td>
+    </tr>
+    <tr>
+        <td>status</td>
+        <td>text</td>
+        <td>scheduled/ongoing/paused/completed</td>
+    </tr>
+</table>
+
+<h3>generated_leads</h3>
+<p>AI-generated leads with voice and transcript data.</p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td>uuid</td>
+        <td>Primary key</td>
+    </tr>
+    <tr>
+        <td>lead_id</td>
+        <td>uuid</td>
+        <td>Foreign key to leads</td>
+    </tr>
+    <tr>
+        <td>niche</td>
+        <td>text</td>
+        <td>Lead category/niche</td>
+    </tr>
+    <tr>
+        <td>voice_url</td>
+        <td>text</td>
+        <td>URL to voice recording</td>
+    </tr>
+    <tr>
+        <td>transcript</td>
+        <td>text</td>
+        <td>Full conversation transcript</td>
+    </tr>
+    <tr>
+        <td>status</td>
+        <td>text</td>
+        <td>Pending/Completed</td>
+    </tr>
+</table>
+
+<h3>calls_log</h3>
+<p>Historical record of all calls made.</p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>uuid</td>
+        <td>uuid</td>
+        <td>Primary key</td>
+    </tr>
+    <tr>
+        <td>lead_id</td>
+        <td>uuid</td>
+        <td>Foreign key to leads</td>
+    </tr>
+    <tr>
+        <td>company</td>
+        <td>text</td>
+        <td>Company name</td>
+    </tr>
+    <tr>
+        <td>phone</td>
+        <td>text</td>
+        <td>Phone number called</td>
+    </tr>
+    <tr>
+        <td>duration</td>
+        <td>integer</td>
+        <td>Call duration in seconds</td>
+    </tr>
+    <tr>
+        <td>call_status</td>
+        <td>text</td>
+        <td>Call status</td>
+    </tr>
+</table>
+
+<h3>job_listings</h3>
+<p>Comprehensive job posting database.</p>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td>uuid</td>
+        <td>Primary key</td>
+    </tr>
+    <tr>
+        <td>job_title</td>
+        <td>text</td>
+        <td>Job position title</td>
+    </tr>
+    <tr>
+        <td>company_name</td>
+        <td>text</td>
+        <td>Hiring company</td>
+    </tr>
+    <tr>
+        <td>job_location</td>
+        <td>text</td>
+        <td>Job location</td>
+    </tr>
+    <tr>
+        <td>salary_min</td>
+        <td>numeric</td>
+        <td>Minimum salary</td>
+    </tr>
+    <tr>
+        <td>salary_max</td>
+        <td>numeric</td>
+        <td>Maximum salary</td>
+    </tr>
+    <tr>
+        <td>job_type</td>
+        <td>text[]</td>
+        <td>Array of job types</td>
+    </tr>
+    <tr>
+        <td>is_remote</td>
+        <td>boolean</td>
+        <td>Remote work available</td>
+    </tr>
+    <tr>
+        <td>emails</td>
+        <td>text[]</td>
+        <td>Contact emails</td>
+    </tr>
+</table>
+
+<h2>6.3 Database Features</h2>
+
+<h3>Row Level Security (RLS)</h3>
+<p>All tables have RLS enabled with permissive policies:</p>
+<ul>
+    <li><strong>Read:</strong> All authenticated users can read all records</li>
+    <li><strong>Write:</strong> All authenticated users can insert/update/delete</li>
+    <li><strong>Rationale:</strong> Team collaboration model - all users share data</li>
+</ul>
+
+<h3>Automatic Timestamps</h3>
+<ul>
+    <li>All tables have <code>created_at</code> (set on insert)</li>
+    <li>Most tables have <code>updated_at</code> (auto-updated via triggers)</li>
+    <li>Uses <code>handle_updated_at()</code> function for consistency</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h1 id="user-flows">7. User Flows & Workflows</h1>
+
+<h2>7.1 Lead Generation & Management Flow</h2>
+<div class="diagram">
+┌─────────────┐
+│   User      │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 1. Navigate to "How It Works"       │
+│    Enter niche/keyword               │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 2. Click "Fetch Leads"              │
+│    Webhook called → External API    │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 3. Preview Fetched Leads            │
+│    Review company, contact, email   │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 4. Click "Store in Database"       │
+│    Leads saved to 'leads' table     │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 5. View in Dashboard                │
+│    Leads appear in statistics       │
+└─────────────────────────────────────┘
+</div>
+
+<h2>7.2 Contact List Upload & Calling Flow</h2>
+<div class="diagram">
+┌─────────────┐
+│   User      │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 1. Navigate to "Contact Lists"      │
+│    Upload CSV/Excel file            │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 2. File Parsed Automatically        │
+│    Columns detected: name, phone    │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 3. Select Contacts to Upload        │
+│    Choose all or specific contacts │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 4. Name List & Upload               │
+│    Contacts saved to database       │
+│    Duplicate phone numbers skipped  │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 5. List Status: "scheduled"         │
+│    scheduled_calls entries created │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 6. Click "Run List"                 │
+│    List status → "scheduled"        │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 7. Click "Start"                    │
+│    List status → "ongoing"          │
+│    Calls initiated via webhook      │
+└─────────────────────────────────────┘
+</div>
+
+<h2>7.3 Individual Contact Calling Flow</h2>
+<div class="diagram">
+┌─────────────┐
+│   User      │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 1. Navigate to "Contacts"            │
+│    View all contacts with phones    │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 2. Click "Call" button              │
+│    Webhook called with name/phone   │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 3. Call Log Created                 │
+│    Status: "initiated"              │
+│    Entry in 'calls_log' table       │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 4. Call Status Updates              │
+│    "ongoing" → "paused" → "resumed" │
+│    User can control via UI         │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 5. Call Ended                       │
+│    Status: "ended"                 │
+│    Duration recorded                │
+└─────────────────────────────────────┘
+</div>
+
+<div class="page-break"></div>
+
+<h1 id="best-features">8. Best Features Highlight</h1>
+
+<div class="feature-box">
+    <h2>🏆 Feature 1: Automated Bulk Contact Import</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>Drag & Drop Interface:</strong> Intuitive file upload</li>
+        <li><strong>Smart Parsing:</strong> Automatically detects name, phone, email columns (case-insensitive)</li>
+        <li><strong>Flexible Formats:</strong> Supports CSV, XLSX, XLS</li>
+        <li><strong>Duplicate Prevention:</strong> Skips existing phone numbers automatically</li>
+        <li><strong>Selective Upload:</strong> Choose specific contacts before importing</li>
+        <li><strong>Batch Processing:</strong> Handles large files efficiently (100 contacts per batch)</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Uses PapaParse for CSV (handles edge cases)</li>
+        <li>XLSX library for Excel (supports all versions)</li>
+        <li>Normalizes column names automatically</li>
+        <li>Validates required fields (name, phone)</li>
+        <li>Stores additional data in JSONB for flexibility</li>
+    </ul>
+</div>
+
+<div class="feature-box">
+    <h2>🏆 Feature 2: Real-time Call Management</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>One-Click Calling:</strong> Initiate calls directly from contact list</li>
+        <li><strong>Live Status Updates:</strong> See call status in real-time (initiated, ongoing, paused, ended)</li>
+        <li><strong>Call Controls:</strong> Pause, resume, or end calls from UI</li>
+        <li><strong>Automatic Logging:</strong> Every call creates a log entry</li>
+        <li><strong>Status Synchronization:</strong> Updates reflect immediately across all users</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Webhook integration for call initiation</li>
+        <li>Status polling and updates</li>
+        <li>Optimistic UI updates</li>
+        <li>Error handling and retry logic</li>
+    </ul>
+</div>
+
+<div class="feature-box">
+    <h2>🏆 Feature 3: Contact List Scheduling System</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>List-Based Workflow:</strong> Schedule entire lists, not individual calls</li>
+        <li><strong>Status Management:</strong> Track lists through lifecycle (scheduled → ongoing → paused → completed)</li>
+        <li><strong>Bulk Operations:</strong> Start, stop, or cancel entire lists</li>
+        <li><strong>Expandable Lists:</strong> View all contacts within a list</li>
+        <li><strong>Filtering:</strong> View lists by status (All, Scheduled, In Progress, Paused, Completed)</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Atomic status updates</li>
+        <li>Transaction-safe operations</li>
+        <li>Efficient batch queries</li>
+        <li>Real-time status reflection</li>
+    </ul>
+</div>
+
+<div class="feature-box">
+    <h2>🏆 Feature 4: AI-Generated Leads with Voice & Transcript</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>Voice Playback:</strong> Play audio recordings directly in browser</li>
+        <li><strong>Full Transcripts:</strong> Read complete conversation text</li>
+        <li><strong>Search Functionality:</strong> Find leads by niche or company</li>
+        <li><strong>Rich Data:</strong> Combines lead info with AI-generated content</li>
+        <li><strong>Status Tracking:</strong> Monitor processing status (Pending, Completed)</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Audio element management</li>
+        <li>Pagination for performance</li>
+        <li>Full-text search capabilities</li>
+        <li>Efficient data loading</li>
+    </ul>
+</div>
+
+<div class="feature-box">
+    <h2>🏆 Feature 5: Comprehensive Job Listings Database</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>Rich Data Model:</strong> Tracks salary, location, type, remote status, emails</li>
+        <li><strong>Advanced Filtering:</strong> Search by multiple criteria</li>
+        <li><strong>Auto-Refresh:</strong> Updates every minute automatically</li>
+        <li><strong>Pagination:</strong> Handles large datasets efficiently (50 per page)</li>
+        <li><strong>External Links:</strong> Direct access to original postings</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Array field support (job_type[], emails[])</li>
+        <li>Complex query building</li>
+        <li>Efficient indexing</li>
+        <li>Real-time updates</li>
+    </ul>
+</div>
+
+<div class="feature-box">
+    <h2>🏆 Feature 6: Modern, Responsive UI</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>Dark/Light Mode:</strong> System preference detection</li>
+        <li><strong>Smooth Animations:</strong> Fade-in, slide-in transitions</li>
+        <li><strong>Loading States:</strong> Clear feedback during operations</li>
+        <li><strong>Toast Notifications:</strong> Non-intrusive success/error messages</li>
+        <li><strong>Responsive Design:</strong> Works on all screen sizes</li>
+        <li><strong>Accessible:</strong> Radix UI components ensure accessibility</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Tailwind CSS for styling</li>
+        <li>next-themes for theme management</li>
+        <li>Sonner for notifications</li>
+        <li>Optimized animations</li>
+    </ul>
+</div>
+
+<div class="feature-box">
+    <h2>🏆 Feature 9: Intelligent Internet Scraping & Lead Generation</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>Automated Web Scraping:</strong> Fetches leads from multiple internet sources automatically</li>
+        <li><strong>Multi-Source Aggregation:</strong> Searches job boards, LinkedIn, company directories, and professional networks</li>
+        <li><strong>Pure Data Extraction:</strong> Returns clean, structured data without HTML or formatting</li>
+        <li><strong>Real-time Results:</strong> Gets current, up-to-date information from the web</li>
+        <li><strong>Keyword-Based Search:</strong> Find leads by niche, job title, or industry</li>
+        <li><strong>Scalable Processing:</strong> Handles large searches and returns hundreds of leads</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Intelligent parsing of unstructured web content</li>
+        <li>Handles rate limits and blocked requests gracefully</li>
+        <li>Normalizes data from different sources</li>
+        <li>Error recovery and retry logic</li>
+        <li>Server-side processing for security</li>
+    </ul>
+</div>
+
+<div class="feature-box">
+    <h2>🏆 Feature 10: Automated Telephony Integration</h2>
+    <p><strong>Why It's Great:</strong></p>
+    <ul>
+        <li><strong>One-Click Calling:</strong> Initiate calls directly from contact list</li>
+        <li><strong>Bulk Calling:</strong> Process entire contact lists automatically</li>
+        <li><strong>Real-time Status:</strong> Track calls as they progress (initiated → ongoing → paused → completed)</li>
+        <li><strong>Call Control:</strong> Pause, resume, or end calls from CRM interface</li>
+        <li><strong>Automatic Logging:</strong> Every call creates a database entry</li>
+        <li><strong>Duplicate Prevention:</strong> Skips contacts with existing completed calls</li>
+        <li><strong>Error Recovery:</strong> Continues processing even if individual calls fail</li>
+    </ul>
+    <p><strong>Technical Excellence:</strong></p>
+    <ul>
+        <li>Webhook-based integration with telephony services</li>
+        <li>Asynchronous call processing</li>
+        <li>Optimistic UI updates</li>
+        <li>Comprehensive error handling</li>
+        <li>Status synchronization across all users</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<h1 id="api-integration">9. API Integration</h1>
+
+<p>The CRM system integrates with external webhook services to enable automated lead generation and calling capabilities. These webhooks are configured via environment variables and provide seamless integration with third-party services.</p>
+
+<h2>9.1 Data Fetching Webhook (Internet Scraping)</h2>
+
+<div class="highlight-box">
+    <h3>Purpose</h3>
+    <p>Automatically scrape and fetch lead data from the internet based on niche/keyword search</p>
+    
+    <h3>Configuration</h3>
+    <p><strong>Environment Variable:</strong> <code>FETCH_DATA_WEBHOOK</code></p>
+    <p><strong>Endpoint:</strong> <code>http://154.38.169.44:5678/webhook/d94fa4b3-385c-4039-b31f-0217bda315be</code></p>
+    <p><strong>Method:</strong> POST</p>
+    <p><strong>Content-Type:</strong> application/json</p>
+</div>
+
+<h3>How It Works</h3>
+<ul>
+    <li>The webhook performs intelligent web scraping across multiple sources</li>
+    <li>Searches job boards, company directories, LinkedIn, and other professional networks</li>
+    <li>Extracts structured lead data including company information, contact details, and job postings</li>
+    <li>Returns pure, clean data ready for import into the CRM</li>
+</ul>
+
+<h3>Request Format</h3>
+<pre>{
+  "keyword": "software engineer"
+}</pre>
+
+<table>
+    <tr>
+        <th>Parameter</th>
+        <th>Type</th>
+        <th>Required</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>keyword</td>
+        <td>string</td>
+        <td>Yes</td>
+        <td>Search term/niche to find leads (e.g., "software engineer", "marketing manager", "data scientist")</td>
+    </tr>
+</table>
+
+<h3>Response Format</h3>
+<pre>{
+  "success": true,
+  "data": [
+    {
+      "company_name": "Tech Corp Inc.",
+      "decision_maker_name": "John Doe, CTO",
+      "email": "john.doe@techcorp.com",
+      "phone_number": "+1-234-567-8900",
+      "city_state": "San Francisco, CA",
+      "salary_range": "$120k-$180k",
+      "job_posting_url": "https://example.com/job/12345"
+    }
+  ]
+}</pre>
+
+<h3>Response Fields</h3>
+<ul>
+    <li><code>company_name</code> (string): Name of the company</li>
+    <li><code>decision_maker_name</code> (string): Contact person's name and title</li>
+    <li><code>email</code> (string, optional): Contact email address</li>
+    <li><code>phone_number</code> (string, optional): Contact phone number</li>
+    <li><code>city_state</code> (string, optional): Location information</li>
+    <li><code>salary_range</code> (string, optional): Salary information if from job posting</li>
+    <li><code>job_posting_url</code> (string, optional): URL to original job posting</li>
+</ul>
+
+<div class="feature-box">
+    <h3>Key Features</h3>
+    <ul>
+        <li><strong>Multi-Source Scraping:</strong> Aggregates data from multiple websites and platforms</li>
+        <li><strong>Intelligent Parsing:</strong> Automatically extracts structured data from unstructured web content</li>
+        <li><strong>Real-time Data:</strong> Fetches current, up-to-date information</li>
+        <li><strong>Pure Data Output:</strong> Returns clean, normalized data without HTML or formatting</li>
+        <li><strong>Scalable:</strong> Can handle large keyword searches and return hundreds of leads</li>
+        <li><strong>Error Handling:</strong> Gracefully handles rate limits, blocked requests, and missing data</li>
+    </ul>
+</div>
+
+<h3>Integration Flow</h3>
+<ol>
+    <li>User enters niche/keyword in "How It Works" page</li>
+    <li>System sends POST request to webhook with keyword</li>
+    <li>Webhook scrapes internet sources for matching leads</li>
+    <li>Returns array of lead objects</li>
+    <li>User previews results before storing</li>
+    <li>Leads are stored in <code>leads</code> table via <code>storeFetchedLeads()</code> function</li>
+</ol>
+
+<h3>Rate Limits</h3>
+<div class="highlight-box">
+    <ul>
+        <li><strong>Development Mode:</strong> 10 leads per request (for testing and development)</li>
+        <li><strong>Production Mode:</strong> Configurable up to 300+ leads per day (or according to business requirements)</li>
+        <li><strong>Note:</strong> Limits are configured on the backend/webhook service and can be adjusted as needed</li>
+    </ul>
+</div>
+
+<h2>9.2 Call Initiation Webhook</h2>
+
+<div class="highlight-box">
+    <h3>Purpose</h3>
+    <p>Initiate automated phone calls to contacts</p>
+    
+    <h3>Configuration</h3>
+    <p><strong>Environment Variable:</strong> <code>CALL_WEBHOOK_BASE_URL</code></p>
+    <p><strong>Endpoint:</strong> <code>http://154.38.169.44:5678/webhook/ede0ead2-29be-42b8-a231-f5f4a52d22b1</code></p>
+    <p><strong>Method:</strong> POST</p>
+    <p><strong>Content-Type:</strong> application/json</p>
+</div>
+
+<h3>How It Works</h3>
+<ul>
+    <li>Integrates with telephony service to make outbound calls</li>
+    <li>Supports both individual calls and bulk calling operations</li>
+    <li>Automatically creates call logs in the database</li>
+    <li>Tracks call status (initiated, ongoing, paused, completed)</li>
+    <li>Enables real-time call control from the CRM interface</li>
+</ul>
+
+<h3>Individual Call Request</h3>
+<pre>{
+  "name": "John Doe",
+  "number": "+1234567890"
+}</pre>
+
+<h3>Bulk Call Request (for contact lists)</h3>
+<pre>{
+  "id": "uuid-here",
+  "name": "John Doe",
+  "phone": "+1234567890",
+  "email": "john@example.com",
+  "company": "Tech Corp",
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z",
+  "job_posting_url": "https://example.com/job/123",
+  "city_state": "San Francisco, CA",
+  "salary_range": "$120k-$180k",
+  "decision_maker_name": "John Doe, CTO"
+}</pre>
+
+<table>
+    <tr>
+        <th>Parameter</th>
+        <th>Type</th>
+        <th>Required</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>name</td>
+        <td>string</td>
+        <td>Yes</td>
+        <td>Contact's name</td>
+    </tr>
+    <tr>
+        <td>number/phone</td>
+        <td>string</td>
+        <td>Yes</td>
+        <td>Phone number in E.164 format or standard format</td>
+    </tr>
+    <tr>
+        <td>id</td>
+        <td>string</td>
+        <td>No</td>
+        <td>Lead ID from database (for bulk calls)</td>
+    </tr>
+    <tr>
+        <td>email</td>
+        <td>string</td>
+        <td>No</td>
+        <td>Contact email</td>
+    </tr>
+    <tr>
+        <td>company</td>
+        <td>string</td>
+        <td>No</td>
+        <td>Company name</td>
+    </tr>
+</table>
+
+<h3>Response Format</h3>
+<pre>{
+  "success": true,
+  "call_id": "call_abc123xyz",
+  "status": "initiated"
+}</pre>
+
+<div class="feature-box">
+    <h3>Key Features</h3>
+    <ul>
+        <li><strong>One-Click Calling:</strong> Initiate calls directly from contact list</li>
+        <li><strong>Bulk Calling:</strong> Process entire contact lists automatically</li>
+        <li><strong>Call Logging:</strong> Every call is automatically logged in <code>calls_log</code> table</li>
+        <li><strong>Status Tracking:</strong> Real-time status updates (initiated → ongoing → paused/resumed → completed)</li>
+        <li><strong>Call Control:</strong> Pause, resume, or end calls from CRM interface</li>
+        <li><strong>Duplicate Prevention:</strong> Skips contacts that already have completed calls</li>
+        <li><strong>Error Recovery:</strong> Handles failed calls gracefully and continues with next contact</li>
+    </ul>
+</div>
+
+<h3>Call Status Lifecycle</h3>
+<div class="diagram">
+initiated → ongoing → [paused] → [resumed] → completed
+                              ↓
+                           ended
+</div>
+
+<h3>Integration Flow</h3>
+<ol>
+    <li>User clicks "Call" button on contact or starts a contact list</li>
+    <li>System sends POST request to webhook with contact information</li>
+    <li>Webhook initiates call via telephony service</li>
+    <li>System creates entry in <code>calls_log</code> table with status "initiated"</li>
+    <li>Call status updates in real-time as call progresses</li>
+    <li>User can control call (pause/resume/end) from UI</li>
+    <li>Final status and duration recorded when call completes</li>
+</ol>
+
+<h2>9.3 Call Status Management</h2>
+
+<p><strong>Purpose:</strong> Update and manage call status within the CRM</p>
+<p><strong>Implementation:</strong> Internal database operations (not a webhook)</p>
+
+<h3>Status Values</h3>
+<ul>
+    <li><code>initiated</code>: Call has been started</li>
+    <li><code>ongoing</code>: Call is currently in progress</li>
+    <li><code>paused</code>: Call has been temporarily paused</li>
+    <li><code>resumed</code>: Call has been resumed after pause (status becomes <code>ongoing</code>)</li>
+    <li><code>completed</code>: Call has finished successfully</li>
+    <li><code>ended</code>: Call was terminated early</li>
+</ul>
+
+<h3>User Controls</h3>
+<ul>
+    <li><strong>Pause:</strong> Temporarily stop an ongoing call</li>
+    <li><strong>Resume:</strong> Continue a paused call</li>
+    <li><strong>End:</strong> Terminate a call early</li>
+</ul>
+
+<h2>9.4 Webhook Configuration</h2>
+
+<h3>Environment Variables</h3>
+<p>Add to <code>.env.local</code> or production environment:</p>
+<pre>FETCH_DATA_WEBHOOK=http://154.38.169.44:5678/webhook/d94fa4b3-385c-4039-b31f-0217bda315be
+CALL_WEBHOOK_BASE_URL=http://154.38.169.44:5678/webhook/ede0ead2-29be-42b8-a231-f5f4a52d22b1</pre>
+
+<h3>Security Considerations</h3>
+<ul>
+    <li>Webhook URLs should be kept secure and not exposed in client-side code</li>
+    <li>All webhook calls are made from server-side actions only</li>
+    <li>Environment variables are never exposed to the browser</li>
+    <li>Consider implementing webhook authentication tokens for production</li>
+</ul>
+
+<h3>Performance Optimization</h3>
+<ul>
+    <li>Webhook calls are asynchronous and don't block UI</li>
+    <li>Bulk operations process contacts in batches</li>
+    <li>Error handling ensures one failed call doesn't stop the entire process</li>
+    <li>Call logs are created optimistically for better UX</li>
+</ul>
+
+<h3>Monitoring & Logging</h3>
+<ul>
+    <li>All webhook requests are logged server-side</li>
+    <li>Errors are captured with full context</li>
+    <li>Success/failure rates can be tracked</li>
+    <li>Call duration and status changes are recorded</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h1 id="security">10. Security & Authentication</h1>
+
+<h2>10.1 Authentication Flow</h2>
+<div class="diagram">
+┌─────────────┐
+│   User      │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 1. Navigate to /login               │
+│    Supabase Auth UI displayed       │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 2. Enter Credentials               │
+│    Email/Password or OAuth         │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 3. Supabase Validates              │
+│    Session created                  │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 4. Redirect to /auth/callback       │
+│    Tokens stored in cookies         │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 5. Middleware Checks Session        │
+│    Redirects to /dashboard        │
+└──────┬──────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────┐
+│ 6. Protected Routes Accessible     │
+│    All dashboard pages available    │
+└─────────────────────────────────────┘
+</div>
+
+<h2>10.2 Security Features</h2>
+
+<h3>Row Level Security (RLS)</h3>
+<ul>
+    <li>All tables have RLS enabled</li>
+    <li>Policies restrict access to authenticated users only</li>
+    <li>Team collaboration model (all users see all data)</li>
+</ul>
+
+<h3>Middleware Protection</h3>
+<ul>
+    <li>All routes except <code>/login</code> and <code>/auth/callback</code> require authentication</li>
+    <li>Automatic session refresh</li>
+    <li>Redirects unauthenticated users to login</li>
+</ul>
+
+<h3>Environment Variables</h3>
+<ul>
+    <li>Supabase URL and keys stored in environment</li>
+    <li>Never exposed to client (except public anon key)</li>
+</ul>
+
+<h1 id="deployment">11. Deployment & Configuration</h1>
+
+<h2>11.1 Environment Variables</h2>
+<pre>NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key</pre>
+
+<h2>11.2 Build & Run</h2>
+<pre># Install dependencies
+npm install
+
+# Development server (port 1111)
+npm run dev
+
+# Production build
+npm run build
+
+# Start production server
+npm start</pre>
+
+<h2>11.3 Database Setup</h2>
+<ol>
+    <li>Run SQL scripts in order:
+        <ul>
+            <li><code>leads_table_final.sql</code></li>
+            <li><code>contact_lists.sql</code></li>
+            <li><code>scheduled_calls.sql</code></li>
+            <li><code>call_logs.sql</code></li>
+            <li><code>generated_leads.sql</code></li>
+            <li><code>job_listings.sql</code></li>
+            <li><code>dashboard_tables.sql</code></li>
+        </ul>
+    </li>
+    <li>Enable Row Level Security on all tables</li>
+    <li>Create policies (included in SQL files)</li>
+    <li>Set up triggers for <code>updated_at</code> fields</li>
+</ol>
+
+<h2>11.4 Production Considerations</h2>
+<ul>
+    <li><strong>Database:</strong> Use Supabase production instance</li>
+    <li><strong>Environment:</strong> Set production environment variables</li>
+    <li><strong>CDN:</strong> Deploy to Vercel/Netlify for optimal performance</li>
+    <li><strong>Monitoring:</strong> Set up error tracking (Sentry, etc.)</li>
+    <li><strong>Backups:</strong> Enable Supabase automatic backups</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h1 id="implementation-status">12. Current Implementation Status</h1>
+
+<h2>✅ Fully Implemented & Working Features</h2>
+
+<p>The CRM system is <strong>fully functional</strong> with all core features implemented and tested. The following components are production-ready:</p>
+
+<h3>1. Data Fetching System ✅</h3>
+<div class="highlight-box">
+    <ul>
+        <li><strong>Status:</strong> Fully operational</li>
+        <li><strong>Functionality:</strong> Internet scraping webhook integrated and working</li>
+        <li><strong>Data Quality:</strong> Returns pure, clean data without duplication</li>
+        <li><strong>Current Limit:</strong> 10 leads per request (development mode)</li>
+        <li><strong>Production Limit:</strong> Configurable up to 300+ leads per day (or according to requirements)</li>
+        <li><strong>Implementation:</strong> Server-side webhook integration with error handling</li>
+    </ul>
+</div>
+
+<h3>2. Single Call System ✅</h3>
+<div class="highlight-box">
+    <ul>
+        <li><strong>Status:</strong> Fully operational</li>
+        <li><strong>Functionality:</strong> Individual contact calling works perfectly</li>
+        <li><strong>Features:</strong>
+            <ul>
+                <li>One-click calling from contact list</li>
+                <li>Real-time status tracking</li>
+                <li>Call control (pause/resume/end)</li>
+                <li>Automatic call logging</li>
+            </ul>
+        </li>
+        <li><strong>Integration:</strong> Webhook-based telephony service connected</li>
+    </ul>
+</div>
+
+<h3>3. Complete CRM Functionality ✅</h3>
+<div class="highlight-box">
+    <ul>
+        <li><strong>Status:</strong> All modules operational</li>
+        <li><strong>Working Features:</strong>
+            <ul>
+                <li>Dashboard with real-time statistics</li>
+                <li>Contact management</li>
+                <li>Contact lists (bulk import, CSV/Excel)</li>
+                <li>Call logs tracking</li>
+                <li>Generated leads with voice/transcript</li>
+                <li>Job listings management</li>
+                <li>Lead fetching and storage</li>
+            </ul>
+        </li>
+        <li><strong>Data Integrity:</strong> No data duplication - duplicate prevention implemented</li>
+    </ul>
+</div>
+
+<h3>4. Database & Backend ✅</h3>
+<div class="highlight-box">
+    <ul>
+        <li><strong>Status:</strong> Fully configured and operational</li>
+        <li><strong>Features:</strong>
+            <ul>
+                <li>All tables created with proper relationships</li>
+                <li>Row Level Security (RLS) enabled</li>
+                <li>Automatic timestamp triggers</li>
+                <li>Foreign key constraints</li>
+                <li>Indexes for performance</li>
+            </ul>
+        </li>
+        <li><strong>Data Management:</strong> Clean data structure, no duplicates</li>
+    </ul>
+</div>
+
+<h2>🔄 Backend Configuration Required</h2>
+
+<h3>Multiple Calls & Static Agent Integration</h3>
+<div class="feature-box">
+    <ul>
+        <li><strong>Status:</strong> Backend configuration needed</li>
+        <li><strong>Current State:</strong> Single calls working perfectly</li>
+        <li><strong>Next Step:</strong> Connect multiple concurrent calls and static agent</li>
+        <li><strong>Implementation:</strong> Backend webhook configuration (n8n workflow)</li>
+        <li><strong>Note:</strong> This is a backend configuration task, not a frontend issue</li>
+    </ul>
+</div>
+
+<h2>📊 System Architecture Components</h2>
+
+<h3>n8n Workflow Integration</h3>
+<table>
+    <tr>
+        <th>Component</th>
+        <th>Status</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>Purpose</td>
+        <td>✅ Configured</td>
+        <td>Orchestrates webhook calls and data processing</td>
+    </tr>
+    <tr>
+        <td>Data Fetching</td>
+        <td>✅ Working</td>
+        <td>Manages data fetching webhook calls</td>
+    </tr>
+    <tr>
+        <td>Call Initiation</td>
+        <td>✅ Working</td>
+        <td>Handles call initiation webhooks</td>
+    </tr>
+    <tr>
+        <td>Multiple Calls</td>
+        <td>🔄 Pending</td>
+        <td>Processes multiple concurrent calls</td>
+    </tr>
+    <tr>
+        <td>Static Agent</td>
+        <td>🔄 Pending</td>
+        <td>Static agent configuration</td>
+    </tr>
+</table>
+
+<p><strong>Location:</strong> Backend server (n8n instance)</p>
+
+<h3>Database Configuration</h3>
+<ul>
+    <li><strong>Status:</strong> ✅ Complete</li>
+    <li><strong>Tables:</strong> All created and configured</li>
+    <li><strong>Relationships:</strong> Foreign keys established</li>
+    <li><strong>Security:</strong> RLS policies active</li>
+    <li><strong>Performance:</strong> Indexes optimized</li>
+</ul>
+
+<h2>🖼️ Image & Media Placeholders</h2>
+
+<p>The documentation includes placeholders for images that can be added manually:</p>
+
+<div class="highlight-box">
+    <h3>Image Placeholders Available:</h3>
+    <ol>
+        <li><strong>System Architecture Diagram</strong>
+            <ul>
+                <li>Location: Section 4.1</li>
+                <li>Placeholder: ASCII diagram (can be replaced with visual diagram)</li>
+                <li>Format: PNG/JPG/SVG recommended</li>
+                <li><em>[Image Placeholder: System Architecture Diagram]</em></li>
+            </ul>
+        </li>
+        <li><strong>Database ERD (Entity Relationship Diagram)</strong>
+            <ul>
+                <li>Location: Section 6.1</li>
+                <li>Placeholder: ASCII diagram (can be replaced with visual ERD)</li>
+                <li>Format: PNG/JPG/SVG recommended</li>
+                <li><em>[Image Placeholder: Database ERD]</em></li>
+            </ul>
+        </li>
+        <li><strong>User Flow Diagrams</strong>
+            <ul>
+                <li>Location: Section 7</li>
+                <li>Placeholder: ASCII flowcharts (can be replaced with visual flowcharts)</li>
+                <li>Format: PNG/JPG/SVG recommended</li>
+                <li><em>[Image Placeholder: User Flow Diagrams]</em></li>
+            </ul>
+        </li>
+        <li><strong>Web Preview Screenshots</strong>
+            <ul>
+                <li>Location: Can be added to relevant sections</li>
+                <li>Suggested locations:
+                    <ul>
+                        <li>Dashboard overview</li>
+                        <li>Contact management interface</li>
+                        <li>Contact lists upload</li>
+                        <li>Call logs view</li>
+                        <li>Generated leads page</li>
+                    </ul>
+                </li>
+                <li>Format: PNG/JPG recommended (1920x1080 or similar)</li>
+                <li><em>[Image Placeholder: Dashboard Screenshot]</em></li>
+                <li><em>[Image Placeholder: Contact Management Screenshot]</em></li>
+                <li><em>[Image Placeholder: Contact Lists Screenshot]</em></li>
+            </ul>
+        </li>
+        <li><strong>n8n Workflow Screenshots</strong>
+            <ul>
+                <li>Location: API Integration section</li>
+                <li>Purpose: Show webhook workflow configuration</li>
+                <li>Format: PNG/JPG recommended</li>
+                <li><em>[Image Placeholder: n8n Workflow Diagram]</em></li>
+            </ul>
+        </li>
+        <li><strong>Database Schema Visualizations</strong>
+            <ul>
+                <li>Location: Database Schema section</li>
+                <li>Purpose: Visual representation of table relationships</li>
+                <li>Format: PNG/SVG recommended</li>
+                <li><em>[Image Placeholder: Database Schema Visualization]</em></li>
+            </ul>
+        </li>
+    </ol>
+</div>
+
+<p><strong>Note:</strong> All image placeholders are clearly marked in the documentation. Images can be inserted manually into the Word document or HTML file as needed.</p>
+
+<h2>📈 Production Readiness</h2>
+
+<h3>Development vs Production Configuration</h3>
+<table>
+    <tr>
+        <th>Feature</th>
+        <th>Development</th>
+        <th>Production</th>
+    </tr>
+    <tr>
+        <td><strong>Data Fetch Limit</strong></td>
+        <td>10 leads/request</td>
+        <td>300+ leads/day (configurable)</td>
+    </tr>
+    <tr>
+        <td><strong>Call Concurrency</strong></td>
+        <td>Single calls</td>
+        <td>Multiple concurrent calls</td>
+    </tr>
+    <tr>
+        <td><strong>Agent Configuration</strong></td>
+        <td>Basic</td>
+        <td>Static agent enabled</td>
+    </tr>
+    <tr>
+        <td><strong>Error Handling</strong></td>
+        <td>✅ Implemented</td>
+        <td>✅ Production-ready</td>
+    </tr>
+    <tr>
+        <td><strong>Data Duplication</strong></td>
+        <td>✅ Prevented</td>
+        <td>✅ Prevented</td>
+    </tr>
+    <tr>
+        <td><strong>Performance</strong></td>
+        <td>✅ Optimized</td>
+        <td>✅ Scalable</td>
+    </tr>
+</table>
+
+<h3>Production Deployment Checklist</h3>
+<ul>
+    <li>✅ Core CRM functionality working</li>
+    <li>✅ Data fetching webhook integrated</li>
+    <li>✅ Single call system operational</li>
+    <li>✅ Database configured and optimized</li>
+    <li>✅ No data duplication issues</li>
+    <li>🔄 Multiple calls configuration (backend)</li>
+    <li>🔄 Static agent setup (backend)</li>
+    <li>📝 Image placeholders ready for manual addition</li>
+</ul>
+
+<h2>🎯 Summary</h2>
+
+<div class="feature-box">
+    <h3>Everything is implemented and working:</h3>
+    <ul>
+        <li>✅ Fetch data functionality - <strong>WORKING</strong></li>
+        <li>✅ Single calls - <strong>WORKING</strong></li>
+        <li>✅ Full CRM system - <strong>WORKING</strong></li>
+        <li>✅ No data duplication - <strong>IMPLEMENTED</strong></li>
+        <li>✅ Database - <strong>CONFIGURED</strong></li>
+        <li>✅ Webhooks - <strong>INTEGRATED</strong></li>
+    </ul>
+</div>
+
+<div class="highlight-box">
+    <h3>Remaining backend tasks:</h3>
+    <ul>
+        <li>🔄 Connect multiple calls (backend configuration)</li>
+        <li>🔄 Static agent setup (backend configuration)</li>
+        <li>🔄 n8n workflow optimization for production</li>
+    </ul>
+</div>
+
+<div class="highlight-box">
+    <h3>Documentation:</h3>
+    <ul>
+        <li>📝 Image placeholders added for manual insertion</li>
+        <li>📝 Web preview sections ready</li>
+        <li>📝 n8n workflow documentation placeholders</li>
+        <li>📝 Database diagrams ready for visual enhancement</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<h1>Conclusion</h1>
+
+<p>The <strong>24hourplacements CRM</strong> is a comprehensive, modern solution for lead generation, contact management, and sales automation. With its robust architecture, real-time capabilities, and intuitive interface, it provides businesses with the tools they need to scale their operations efficiently.</p>
+
+<div class="highlight-box">
+    <h2>Key Strengths</h2>
+    <ul>
+        <li>✅ Modern tech stack (Next.js 16, React 19, Supabase)</li>
+        <li>✅ Real-time data synchronization</li>
+        <li>✅ Automated workflows</li>
+        <li>✅ Scalable architecture</li>
+        <li>✅ Secure authentication</li>
+        <li>✅ Comprehensive feature set</li>
+    </ul>
+</div>
+
+<div class="highlight-box">
+    <h2>Technical Excellence</h2>
+    <ul>
+        <li>Type-safe with TypeScript</li>
+        <li>Optimized performance</li>
+        <li>Responsive design</li>
+        <li>Accessible UI components</li>
+        <li>Efficient database queries</li>
+        <li>Error handling</li>
+    </ul>
+</div>
+
+<hr style="margin: 40pt 0; border: none; border-top: 2px solid #ddd;">
+
+<p style="text-align: center; color: #7f8c8d; font-size: 10pt;">
+    <strong>Document Version:</strong> 1.0 | <strong>Last Updated:</strong> 2024 | <strong>Maintained By:</strong> Development Team
+</p>
+
+<p style="text-align: center; color: #95a5a6; font-size: 9pt; margin-top: 20pt;">
+    <em>Note: Webhook documentation is intentionally left for manual completion as requested.</em>
+</p>
+
+</body>
+</html>
